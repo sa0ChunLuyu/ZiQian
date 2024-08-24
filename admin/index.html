@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>子千</title>
+  <link rel="shortcut icon" href="favicon.png"/>
+  <script src="/tinymce/js/tinymce/tinymce.min.js"></script>
+  <script>
+    // PUBLIC CONFIG
+    (function () {
+      const config_data_str = localStorage.getItem('APP_CONFIG')
+      let config_data = {
+        api: {
+          url: [],
+          success: 200,
+          error: '网络请求发生错误',
+          login: [100002, 100003]
+        },
+        title: document.title,
+        version: '最后更新时间 2024年8月24日 20:14:48',
+        token: 'TOKENC0F-5FD1-4A4D-ABC5-A35FEDCF6E68'
+      }
+      window.CONFIG_RESET_DATA = JSON.parse(JSON.stringify(config_data))
+      if (!!config_data_str) config_data.api.url = JSON.parse(config_data_str).api.url
+      localStorage.setItem('APP_CONFIG', JSON.stringify(config_data))
+    })()
+    // PUBLIC CONFIG END
+  </script>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
