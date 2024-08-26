@@ -9,6 +9,9 @@
   <script>
     // PUBLIC CONFIG
     (function () {
+      window.BASE_URL = '/api/map?client=admin'
+      window.BASE_ASSETS = ''
+      window.CLIENT_TYPE = 'admin'
       const config_data_str = localStorage.getItem('APP_CONFIG')
       let config_data = {
         api: {

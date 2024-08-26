@@ -35,7 +35,7 @@ const timeTip = () => {
         </div>
         <div class="index_content_wrapper" ml-5>
           <div class="index_title_wrapper">{{ timeTip() }}</div>
-          <div class="index_desc_wrapper" mt-3>欢迎使用后台管理系统</div>
+          <div class="index_desc_wrapper" mt-3>欢迎使用{{ $store.config['网站名称'] }}后台管理系统</div>
           <div class="index_desc_wrapper" mt-3>点击左侧导航栏开始操作</div>
         </div>
       </div>
@@ -43,24 +43,6 @@ const timeTip = () => {
   </div>
 </template>
 <style scoped>
-.index_title_wrapper {
-  font-size: 20px;
-}
-
-.index_tip_wrapper {
-  display: flex;
-  align-items: center;
-  width: 600px;
-  background: #eaf4fe;
-  color: #3095fa;
-  border-radius: 6px;
-  padding: 30px;
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
 .index_page_wrapper {
   min-height: calc(100vh - 55px - 40px);
   top: 0;
@@ -68,7 +50,23 @@ const timeTip = () => {
   left: 0;
   right: 0;
   background: #ffffff;
-  border-radius: 6px;
+
+  .index_tip_wrapper {
+    display: flex;
+    align-items: center;
+    width: 600px;
+    background: #eaf4fe;
+    color: #3095fa;
+    padding: 30px;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    .index_title_wrapper {
+      font-size: 20px;
+    }
+  }
 }
 </style>
 <route>

@@ -9,26 +9,29 @@
   },
   "dependencies": {
     "@icon-park/vue-next": "^1.4.2",
-    "@vueuse/core": "^8.4.2",
+    "@vueuse/core": "^11.0.1",
     "axios": "^1.7.5",
+    "crypto-js": "^4.2.0",
     "element-plus": "^2.8.1",
     "json-editor-vue3": "^1.1.1",
     "normalize.css": "^8.0.1",
     "pinia": "^2.2.2",
-    "crypto-js": "^4.2.0",
     "vue": "^3.4.38",
     "vue-json-pretty": "^2.4.0",
     "vue-router": "^4.4.3"
   },
   "devDependencies": {
-    "@originjs/vite-plugin-commonjs": "^1.0.3",
-    "@vitejs/plugin-vue": "^2.3.3",
-    "pnpm": "^7.0.1",
-    "unocss": "^0.33.2",
-    "unplugin-auto-import": "^0.7.1",
-    "unplugin-vue-components": "^0.19.5",
-    "vite": "^2.9.9",
-    "vite-plugin-pages": "^0.23.0",
-    "vite-plugin-vue-layouts": "^0.6.0"
+    "@vitejs/plugin-vue": "^5.1.2",
+    "pnpm": "^9.8.0",
+    "unocss": "^0.62.2",
+    "sass": "^1.77.8",
+    "unplugin-auto-import": "^0.18.2",
+    "unplugin-vue-components": "^0.27.4",
+    "unplugin-vue-macros": "^2.11.6",
+    "unplugin-vue-router": "^0.10.7",
+    "vite": "^5.4.2",
+    "vite-plugin-inspect": "^0.8.7",
+    "vite-plugin-vue-devtools": "^7.3.8",
+    "vite-plugin-vue-layouts": "^0.11.0"
   }
 }

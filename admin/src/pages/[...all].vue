@@ -1,25 +1,44 @@
 <script setup>
 </script>
 <template>
-  <div p="x4 y10" text="center blue-500 dark:gray-200">
-    <div class="i404_wrapper">
-      <div>404</div>
-    </div>
-    <div mt-2>未找到页面</div>
-    <div mt-10>
-      <el-button type="primary" @click="$router.back()">返回</el-button>
+  <div class="page_404_wrapper">
+    <div class="page_404_box_wrapper">
+      <div class="page_404_svg_wrapper">
+        <Svg404></Svg404>
+      </div>
+      <div class="page_404_text_wrapper">
+        <div>未找到页面</div>
+        <div ml-2>
+          <el-button text type="primary" @click="$router.back()">返回</el-button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 <style scoped>
-.i404_wrapper {
-  width: 300px;
-  margin: 0 auto;
-  font-size: 100px;
+.page_404_wrapper {
+  background: #cccccc40;
+  height: 100vh;
 }
 
-.i404_wrapper img {
-  width: 300px;
+.page_404_box_wrapper {
+  background: #ffffff;
+  width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 0 10px #cccccc;
+  padding-bottom: 50px;
+}
+
+.page_404_svg_wrapper {
+  width: 400px;
+  margin: 0 auto;
+}
+
+.page_404_text_wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
 }
 </style>
 <route>

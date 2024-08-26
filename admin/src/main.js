@@ -7,6 +7,7 @@ import 'uno.css'
 import 'normalize.css'
 import '@icon-park/vue-next/styles/index.css'
 import 'element-plus/dist/index.css'
+import './styles/element.css'
 
 const app = createApp(App)
 app.use(router)

@@ -19,4 +19,15 @@ body {
 * {
   outline: none;
 }
+
+.form_input_wrapper {
+  width: 200px;
+  display: flex;
+  align-items: center;
+}
+
+.table_item_line_wrapper {
+  display: flex;
+  align-items: center;
+}
 </style>

@@ -16,6 +16,7 @@ class ApiController extends Controller
       'apiYo' => $base_url . '/api/yo'
     ];
     $client = $request->get('client');
+    if (!$client) $client = 'public';
     $route = [];
     $client_array = ['admin'];
     if (in_array($client, $client_array)) {
@@ -23,7 +24,7 @@ class ApiController extends Controller
       foreach ($route_map as $item) {
         if ($item['type'] == $client) {
           $key = ucfirst($client) . $item['class'] . ucfirst($item['name']);
-          $url = $base_url . '/api/' . ucfirst($client) . '/' . $item['class'] . '/' . $item['name'] . $item['query'];
+          $url = $base_url . '/api/' . ucfirst($client) . '/' . $item['class'] . '/' . $item['name'] . $item['param'] . $item['query'];
           $route[$key] = $url;
         }
       }
