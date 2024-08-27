@@ -178,8 +178,15 @@ class QuickDatabaseController extends Controller
     $form = json_decode($quick_database->form, true);
     $code = 100017;
     foreach ($rules as $label => $rule) {
-      if (!isset($data[$label])) {
-        $data[$label] = $form[$label]['value'];
+      $form_index = 0;
+      foreach ($form as $key => $form_item) {
+        if (isset($form_item[$label])) {
+          $form_index = $key;
+          break;
+        }
+      }
+      if (!isset($data[$label]) || !$data[$label]) {
+        $data[$label] = $form[$form_index][$label]['value'];
       }
       foreach ($rule['check'] as $check) {
         $message = $check['message'];

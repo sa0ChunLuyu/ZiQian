@@ -34,7 +34,7 @@ class ConfigController extends Controller
     $config = $config_db->get();
     foreach ($config as $item) {
       $value = $item->value;
-      if (in_array($item->type, [3, 4, 5])) {
+      if (in_array($item->type, ['stringArray', 'imageArray', 'json', 'switch'])) {
         $value = json_decode($value, true);
       }
       $config_arr[$item->name] = $value;

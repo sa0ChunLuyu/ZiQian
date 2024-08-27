@@ -20,6 +20,29 @@ use Illuminate\Support\Str;
 class AdminController extends Controller
 {
   /***auto route
+   * name: resetPassword
+   * type: admin
+   * method: post
+   */
+  public function resetPassword(Request $request)
+  {
+    Token::admin(['admin-list']);
+    $id = $request->post('id');
+    $admin = Admin::where('id', $id)->where('del', 2)->first();
+    if (!$admin) Zi::eco(100001, ['管理员']);
+    $admin_account = AdminAccount::where('admin', $admin->id)->where('del', 2)->first();
+    if (!$admin_account) Zi::eco(100001, ['管理员']);
+    $password = Str::password(16);
+    $admin->initial_password = 1;
+    $admin->save();
+    $admin_account->secret = bcrypt($password);
+    $admin_account->save();
+    return Zi::echo([
+      'password' => $password
+    ]);
+  }
+
+  /***auto route
    * name: create
    * type: admin
    * method: post
@@ -151,7 +174,7 @@ class AdminController extends Controller
   {
     $captcha_type_config = Config::where('name', '后台图形验证')->first();
     if (!!$captcha_type_config) {
-      if ($captcha_type_config->value != '0') {
+      if ($captcha_type_config->value == '1') {
         $hash = $request->post('hash');
         $code = $request->post('code');
         $time = $request->post('time');

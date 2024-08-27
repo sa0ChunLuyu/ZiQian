@@ -11,6 +11,7 @@ import VueRouter from 'unplugin-vue-router/vite'
 import {VueRouterAutoImports} from 'unplugin-vue-router'
 import {ElementPlusResolver} from 'unplugin-vue-components/resolvers'
 import {presetAttributify, presetIcons, presetUno} from "unocss";
+import {viteCommonjs} from '@originjs/vite-plugin-commonjs'
 
 const package_path = 'mana'
 export default defineConfig({
@@ -61,6 +62,7 @@ export default defineConfig({
         })
       ],
     }),
-    VueDevTools()
+    VueDevTools(),
+    viteCommonjs()
   ]
 })

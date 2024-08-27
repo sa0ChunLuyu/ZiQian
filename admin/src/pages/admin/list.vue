@@ -25,14 +25,22 @@ const page_options = ref(JSON.parse(JSON.stringify(default_page_options)))
 onBeforeRouteUpdate((to) => {
   routerChange(to.query)
 })
-const admin_list = ref([])
+const table_list_active = computed(() => {
+  return table_list.value.filter((item) => {
+    return item.EDIT_ACTIVE
+  })
+})
+const table_list = ref([])
 const last_page = ref(0)
 const AdminList = async () => {
-  edit_data.value = JSON.parse(JSON.stringify(default_data))
-  table_ref.value.setCurrentRow(null)
   const response = await $api('AdminAdminList', page_options.value)
   $response(response, () => {
-    admin_list.value = response.data.list.data
+    table_list.value = response.data.list.data.map((item) => {
+      return {
+        ...item,
+        EDIT_ACTIVE: false
+      }
+    })
     last_page.value = response.data.list.last_page
   })
 }
@@ -70,19 +78,6 @@ const searchClearClick = () => {
     query: JSON.parse(JSON.stringify(default_page_options))
   })
 }
-const table_ref = ref(null)
-const tableRef = (e) => {
-  table_ref.value = e
-}
-const tableRowClick = (e) => {
-  if (e.id === edit_data.value.id) {
-    edit_data.value = JSON.parse(JSON.stringify(default_data))
-    table_ref.value.setCurrentRow(null)
-  } else {
-    edit_data.value = JSON.parse(JSON.stringify(e))
-    table_ref.value.setCurrentRow(e)
-  }
-}
 
 const edit_show = ref(false)
 const default_data = {
@@ -96,13 +91,6 @@ const default_data = {
   status: 1,
 }
 const edit_data = ref(JSON.parse(JSON.stringify(default_data)))
-const editClick = async (type) => {
-  if (type === 0) {
-    table_ref.value.setCurrentRow(null)
-    edit_data.value = JSON.parse(JSON.stringify(default_data))
-  }
-  edit_show.value = true
-}
 const copy_show = ref(false)
 const copy_data = ref(JSON.parse(JSON.stringify(default_data)))
 const editDoneClick = async () => {
@@ -116,7 +104,6 @@ const editDoneClick = async () => {
   }
   $response(response, () => {
     edit_show.value = false
-    table_ref.value.setCurrentRow(null)
     AdminList()
     if (data.id === 0) {
       copy_data.value = JSON.parse(JSON.stringify(data))
@@ -129,14 +116,12 @@ const editDoneClick = async () => {
 }
 const AdminDelete = async () => {
   const response = await $api('AdminAdminDelete', {
-    id: edit_data.value.id
+    id: table_list_active.value[0].id
   })
   $response(response, () => {
     window.$message().success('删除成功')
-    edit_data.value = JSON.parse(JSON.stringify(default_data))
-    table_ref.value.setCurrentRow(null)
-    const index = admin_list.value.findIndex(item => item.id === response.data.id)
-    admin_list.value.splice(index, 1)
+    const index = table_list.value.findIndex(item => item.id === response.data.id)
+    table_list.value.splice(index, 1)
   })
 }
 const deleteClick = () => {
@@ -213,27 +198,36 @@ const AdminResetPassword = async () => {
     copy_show.value = true
   })
 }
+const editActiveChange = (active_index) => {
+  table_list.value.forEach((item, index) => {
+    if (index !== active_index) {
+      item.EDIT_ACTIVE = false
+    }
+  })
+}
+const createClick = () => {
+  edit_data.value = JSON.parse(JSON.stringify(default_data))
+  edit_show.value = true
+}
+const updateClick = () => {
+  edit_data.value = JSON.parse(JSON.stringify(table_list_active.value[0]))
+  edit_show.value = true
+}
 </script>
 <template>
   <div>
-    <el-dialog v-model="copy_show" title="创建成功" width="500px"
+    <el-dialog v-model="copy_show" title="信息" width="500px"
                :close-on-click-modal="false"
                :close-on-press-escape="false"
                :show-close="false">
-      <div>
-        <div class="input_line_wrapper">
-          <div class="input_line_tag_wrapper">
-            <el-tag disable-transitions w-full type="info">账号</el-tag>
-          </div>
-          <div ml-2>{{ copy_data.account }}</div>
-        </div>
-        <div mt-2 class="input_line_wrapper">
-          <div class="input_line_tag_wrapper">
-            <el-tag disable-transitions w-full type="info">密码</el-tag>
-          </div>
-          <div ml-2>{{ copy_data.password }}</div>
-        </div>
-      </div>
+      <el-form>
+        <el-form-item label="账号">
+          <div>{{ copy_data.account }}</div>
+        </el-form-item>
+        <el-form-item label="密码">
+          <div>{{ copy_data.password }}</div>
+        </el-form-item>
+      </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="copy_show = false">关闭</el-button>
@@ -242,57 +236,63 @@ const AdminResetPassword = async () => {
       </template>
     </el-dialog>
 
-    <el-dialog v-model="edit_show" :title="!!edit_data.id ? '编辑' : '新建'" width="500px"
+    <el-dialog v-model="edit_show" :title="!!edit_data.id ? '编辑' : '新建'" width="1000px"
                :close-on-click-modal="false"
                :close-on-press-escape="false"
                :show-close="false" top="30px">
-      <div>
-        <el-form label-position="top">
-          <el-form-item label="账号">
-            <el-input v-model="edit_data.account" placeholder="请输入账号"></el-input>
-          </el-form-item>
-          <el-form-item label="昵称">
-            <el-input v-model="edit_data.nickname" placeholder="请输入昵称"></el-input>
-          </el-form-item>
-          <el-form-item label="头像">
-            <el-upload :auto-upload="false" :show-file-list="false" @change="fileChange">
-              <el-avatar :size="200" shape="square"
-                         :src="$image(!!edit_data.avatar ? edit_data.avatar : '/storage/assets/default/avatar.png')"></el-avatar>
-            </el-upload>
-          </el-form-item>
-          <el-form-item label="权限组">
-            <div class="form_input_wrapper">
-              <el-select :disabled="edit_data.id === 1" v-model="edit_data.admin_auth_group"
-                         placeholder="请选择权限组">
-                <el-option :disabled="i.id === -1" v-for="(i,k) in [
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form label-position="top">
+            <el-form-item label="账号">
+              <el-input v-model="edit_data.account" placeholder="请输入账号"></el-input>
+            </el-form-item>
+            <el-form-item label="昵称">
+              <el-input v-model="edit_data.nickname" placeholder="请输入昵称"></el-input>
+            </el-form-item>
+            <el-form-item label="头像">
+              <el-upload :auto-upload="false" :show-file-list="false" @change="fileChange">
+                <el-avatar :size="200" shape="square"
+                           :src="$image(!!edit_data.avatar ? edit_data.avatar : '/storage/assets/default/avatar.png')"></el-avatar>
+              </el-upload>
+            </el-form-item>
+          </el-form>
+        </el-col>
+        <el-col :span="12">
+          <el-form label-position="top">
+            <el-form-item label="权限组">
+              <div class="form_input_wrapper">
+                <el-select :disabled="edit_data.id === 1" v-model="edit_data.admin_auth_group"
+                           placeholder="请选择权限组">
+                  <el-option :disabled="i.id === -1" v-for="(i,k) in [
                   {id:-1,name:'超级管理员'},
                   {id:0,name:'暂不分配'},
                   ...admin_auth_group,
                 ]" :key="k" :label="i.name" :value="i.id"/>
+                </el-select>
+              </div>
+              <el-button ml-2 @click="AdminAuthGroupSelect()" type="primary">刷新</el-button>
+            </el-form-item>
+            <el-form-item label="密码">
+              <div class="form_input_wrapper">
+                <el-input v-model="edit_data.password" placeholder="请输入密码"></el-input>
+              </div>
+              <el-button ml-2 @click="randomPasswordClick()" type="primary">随机生成</el-button>
+            </el-form-item>
+            <el-form-item label="下次登录修改密码">
+              <el-select v-model="edit_data.initial_password" placeholder="请选择">
+                <el-option label="是" :value="1"/>
+                <el-option label="否" :value="2"/>
               </el-select>
-            </div>
-            <el-button ml-2 @click="AdminAuthGroupSelect()" type="primary">刷新</el-button>
-          </el-form-item>
-          <el-form-item label="密码">
-            <div class="form_input_wrapper">
-              <el-input v-model="edit_data.password" placeholder="请输入密码"></el-input>
-            </div>
-            <el-button ml-2 @click="randomPasswordClick()" type="primary">随机生成</el-button>
-          </el-form-item>
-          <el-form-item label="下次登录修改密码">
-            <el-select v-model="edit_data.initial_password" placeholder="请选择">
-              <el-option label="是" :value="1"/>
-              <el-option label="否" :value="2"/>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="edit_data.status" placeholder="请选择状态">
-              <el-option label="可用" :value="1"/>
-              <el-option label="停用" :value="2"/>
-            </el-select>
-          </el-form-item>
-        </el-form>
-      </div>
+            </el-form-item>
+            <el-form-item label="状态">
+              <el-select v-model="edit_data.status" placeholder="请选择状态">
+                <el-option label="可用" :value="1"/>
+                <el-option label="停用" :value="2"/>
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="edit_show = false">关闭</el-button>
@@ -349,14 +349,20 @@ const AdminResetPassword = async () => {
           </el-form-item>
         </el-form>
         <div mt-1>
-          <el-button @click="editClick(0)" type="primary">新建</el-button>
-          <el-button :disabled="edit_data.id === 0" @click="editClick(1)" type="success">编辑</el-button>
-          <el-button :disabled="edit_data.id === 0" @click="deleteClick()" type="danger">删除</el-button>
-          <el-button :disabled="edit_data.id === 0" @click="resetPasswordClick()" type="warning">重置密码</el-button>
+          <el-button @click="createClick()" type="primary">添加人员</el-button>
+          <el-button :disabled="table_list_active.length !== 1" @click="updateClick()" type="primary">编辑</el-button>
+          <el-button :disabled="table_list_active.length !== 1" @click="deleteClick()" type="danger">删除</el-button>
+          <el-button :disabled="table_list_active.length !== 1" @click="resetPasswordClick()" type="warning">
+            重置密码
+          </el-button>
         </div>
-        <el-table row-class-name="cursor-pointer" mt-2 border :data="admin_list" highlight-current-row
-                  style="width: 100%"
-                  @row-click="tableRowClick" :ref="tableRef">
+        <el-table mt-2 border :data="table_list" style="width: 100%">
+          <el-table-column label="" width="40">
+            <template #default="scope">
+              <el-checkbox @change="editActiveChange(scope.$index)"
+                           v-model="table_list[scope.$index].EDIT_ACTIVE"></el-checkbox>
+            </template>
+          </el-table-column>
           <el-table-column label="昵称">
             <template #default="scope">
               <div class="table_item_line_wrapper">
@@ -390,7 +396,7 @@ const AdminResetPassword = async () => {
             </template>
           </el-table-column>
         </el-table>
-        <el-pagination v-if="last_page > 1" :current-page="page_options.page" mt-2 background layout="prev, pager, next"
+        <el-pagination v-if="last_page > 0" :current-page="page_options.page" mt-2 background layout="prev, pager, next"
                        :page-count="last_page" @update:current-page="searchClick"/>
       </div>
     </el-card>
