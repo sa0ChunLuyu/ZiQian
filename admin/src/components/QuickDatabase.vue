@@ -9,12 +9,61 @@ import {onBeforeRouteUpdate} from "vue-router";
 import $router from "~/router";
 import JsonEditorVue from 'json-editor-vue3'
 import VueJsonPretty from 'vue-json-pretty'
+import IconsJson from '@icon-park/vue-next/icons.json';
 
 const $props = defineProps({
   database: {
     type: String,
     default: ''
   }
+})
+const iconCollapseChange = (e) => {
+  icon_collapse.value = e
+}
+const icons_search = ref('')
+const icon_collapse = ref('')
+const icons_show = ref(true)
+const icons_list = computed(() => {
+  icons_show.value = false
+  let list = []
+  let search = icons_search.value
+  if (!!search) {
+    for (let i = 0; i < IconsJson.length; i++) {
+      let push = false
+      if (IconsJson[i].title.toLowerCase().indexOf(search.toLowerCase()) !== -1) push = true
+      if (IconsJson[i].name.toLowerCase().indexOf(search.toLowerCase()) !== -1) push = true
+      if (IconsJson[i].category.toLowerCase().indexOf(search.toLowerCase()) !== -1) push = true
+      if (IconsJson[i].categoryCN.toLowerCase().indexOf(search.toLowerCase()) !== -1) push = true
+      for (let ii = 0; ii < IconsJson[i].tag.length; ii++) {
+        if (IconsJson[i].tag[ii].toLowerCase().indexOf(search.toLowerCase()) !== -1) push = true
+      }
+      if (push) list.push(IconsJson[i])
+    }
+  } else {
+    list = IconsJson
+  }
+  let list_turn = {}
+  for (let i = 0; i < list.length; i++) {
+    if (!(list[i]['category'] in list_turn)) {
+      list_turn[list[i]['category']] = {
+        name: list[i]['category'],
+        nameCN: list[i]['categoryCN'],
+        children: []
+      }
+    }
+    list_turn[list[i]['category']]['children'].push({
+      title: list[i]['title'],
+      name: list[i]['name'],
+    })
+  }
+  let ret = []
+  for (let i in list_turn) {
+    ret.push(list_turn[i])
+  }
+  nextTick(() => {
+    icons_show.value = true
+  })
+  return ret
 })
 const database_info = ref(false)
 const getDatabaseInfo = async () => {
@@ -63,23 +112,26 @@ const getDataList = async () => {
     ...q,
   })
   $response(response, () => {
-    if (!!database_info.value.list.page) {
-      table_list.value = response.data.list.data.map((item) => {
-        return {
-          ...item,
-          EDIT_ACTIVE: false
-        }
-      })
-      last_page.value = response.data.list.last_page
-    } else {
-      table_list.value = response.data.list.map((item) => {
-        return {
-          ...item,
-          EDIT_ACTIVE: false
-        }
-      })
-      last_page.value = 0
-    }
+    table_list.value = []
+    nextTick(() => {
+      if (!!database_info.value.list.page) {
+        table_list.value = response.data.list.data.map((item) => {
+          return {
+            ...item,
+            EDIT_ACTIVE: false
+          }
+        })
+        last_page.value = response.data.list.last_page
+      } else {
+        table_list.value = response.data.list.map((item) => {
+          return {
+            ...item,
+            EDIT_ACTIVE: false
+          }
+        })
+        last_page.value = 0
+      }
+    })
   })
 }
 const routerChange = (query) => {
@@ -148,7 +200,17 @@ const setEditData = (info) => {
           form[ii] = info[ii]
         }
       } else {
-        form[ii] = database_info.value.form[i][ii].value
+        let default_value = String(JSON.parse(JSON.stringify(database_info.value.form[i][ii].value)))
+        if (default_value.includes('query:')) {
+          let default_value_array = default_value.split(':')
+          default_value = search_form.value[default_value_array[1]].value
+          if (default_value_array[2] === 'number') {
+            default_value = Number(default_value)
+          }
+          form[ii] = default_value
+        } else {
+          form[ii] = JSON.parse(JSON.stringify(database_info.value.form[i][ii].value))
+        }
       }
     }
     e.form.push(form)
@@ -390,18 +452,38 @@ const imageDeleteClick = (k, ik, iik) => {
   }
 }
 
-const rich_text = ref('')
-const rich_text_show = ref(false)
-const richTextShow = (value) => {
-  rich_text.value = value
-  rich_text_show.value = true
+const icon_show = ref(false)
+
+const iconChooseClick = (icon) => {
+  edit_data.value.form[icon_index.value][icon_active.value] = ''
+  nextTick(() => {
+    edit_data.value.form[icon_index.value][icon_active.value] = icon
+  })
+  icon_show.value = false
+}
+const icon_active = ref('')
+const icon_index = ref(0)
+const iconClick = (index, active) => {
+  icon_index.value = index
+  icon_active.value = active
+  icon_show.value = true
+  icons_show.value = true
 }
 
-const json = ref({})
-const json_show = ref(false)
-const jsonShow = (value) => {
-  json.value = JSON.parse(value)
-  json_show.value = true
+const value_view_content = ref('')
+const value_view_type = ref('')
+const value_view_show = ref(false)
+const valueViewShow = (value, type) => {
+  value_view_type.value = type
+  switch (type) {
+    case 'richText':
+      value_view_content.value = value
+      break
+    case 'json':
+      value_view_content.value = JSON.parse(value)
+      break
+  }
+  value_view_show.value = true
 }
 
 defineExpose({
@@ -414,16 +496,37 @@ onMounted(() => {
 })
 </script>
 <template>
-  <el-dialog v-model="rich_text_show" title="富文本"
-             :width="1000">
+  <el-drawer v-model="icon_show" title="图标选择">
+    <div>
+      <el-form>
+        <el-form-item label="搜索">
+          <el-input class="input_line_input_wrapper" v-model="icons_search"
+                    placeholder="请输入"></el-input>
+        </el-form-item>
+      </el-form>
+      <div mt-2>
+        <el-collapse v-for="(i,k) in icons_list" accordion @change="iconCollapseChange">
+          <el-collapse-item :title="i.nameCN" :name="i.name">
+            <el-row v-if="i.name === icon_collapse">
+              <el-col :span="4" v-for="(ii,kk) in i.children" :key="kk">
+                <div @click="iconChooseClick(ii.name)" cursor-pointer text-center m-2>
+                  <div>
+                    <Icon v-if="icons_show" :type="ii.name"></Icon>
+                  </div>
+                  <div>{{ ii.title }}</div>
+                </div>
+              </el-col>
+            </el-row>
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+    </div>
+  </el-drawer>
+  <el-dialog v-model="value_view_show" title="内容查看" :width="1000">
     <el-scrollbar height="300px">
-      <div v-html="rich_text"></div>
-    </el-scrollbar>
-  </el-dialog>
-  <el-dialog v-model="json_show" title="JSON"
-             :width="1000">
-    <el-scrollbar height="300px">
-      <VueJsonPretty :data="json"></VueJsonPretty>
+      <div v-if="value_view_type === 'richText'" v-html="value_view_content"></div>
+      <VueJsonPretty v-else-if="value_view_type === 'json'" :data="value_view_content"></VueJsonPretty>
+      <div v-else>{{ value_view_content }}</div>
     </el-scrollbar>
   </el-dialog>
   <el-dialog v-if="!!database_info" v-model="edit_show" :title="edit_data.id === 0 ? '新建' : '编辑'"
@@ -436,7 +539,7 @@ onMounted(() => {
           <el-form-item v-for="(ii,ik) in database_info.form[k]" :key="ik" :label="ii.label">
             <template v-if="formType(ii.type) === 'select'">
               <el-select @change="(e)=>{formSelectChange(e,k,ik)}" v-model="edit_data.form[k][ik]"
-                         :placeholder="ii.placeholder">
+                         :placeholder="ii.placeholder" :disabled="ii.disabled">
                 <el-option v-for="(iii,iik) in ii.select" :key="iik" :label="iii.label"
                            :value="iii.value"></el-option>
               </el-select>
@@ -448,7 +551,8 @@ onMounted(() => {
                     <Icon type="delete" :size="12"></Icon>
                   </el-button>
                 </div>
-                <el-upload :auto-upload="false" :show-file-list="false" @change="(e)=>{fileChange(e,k,ik,-2)}">
+                <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
+                           @change="(e)=>{fileChange(e,k,ik,-2)}">
                   <el-image class="form_image_show_wrapper" v-if="!!edit_data.form[k][ik]"
                             :src="$image(edit_data.form[k][ik])" fit="contain"></el-image>
                   <div v-else class="form_image_empty_wrapper">上传图片</div>
@@ -456,20 +560,21 @@ onMounted(() => {
               </div>
             </template>
             <template v-else-if="formType(ii.type) === 'textarea'">
-              <el-input type="textarea" v-model="edit_data.form[k][ik]" :placeholder="ii.placeholder"></el-input>
+              <el-input :disabled="ii.disabled" type="textarea" v-model="edit_data.form[k][ik]"
+                        :placeholder="ii.placeholder"></el-input>
             </template>
             <template v-else-if="formType(ii.type) === 'stringArray'">
               <div w-full>
                 <div v-for="(iii,iik) in edit_data.form[k][ik]" class="form_string_array_wrapper mb-2">
                   <el-input class="form_string_array_input_wrapper" v-model="edit_data.form[k][ik][iik]"
-                            :placeholder="ii.placeholder"></el-input>
+                            :placeholder="ii.placeholder" :disabled="ii.disabled"></el-input>
                   <el-button @click="stringArrayDeleteClick(k, ik, iik)" text>
                     <Icon type="delete"></Icon>
                   </el-button>
                 </div>
                 <div class="form_string_array_wrapper">
                   <el-input class="form_string_array_input_wrapper" v-model="string_array_input"
-                            :placeholder="ii.placeholder"></el-input>
+                            :placeholder="ii.placeholder" :disabled="ii.disabled"></el-input>
                   <el-button @click="stringArrayCreateClick(k, ik)" text>
                     <Icon type="plus"></Icon>
                   </el-button>
@@ -484,12 +589,14 @@ onMounted(() => {
                       <Icon type="delete" :size="12"></Icon>
                     </el-button>
                   </div>
-                  <el-upload :auto-upload="false" :show-file-list="false" @change="(e)=>{fileChange(e,k,ik,iik)}">
+                  <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
+                             @change="(e)=>{fileChange(e,k,ik,iik)}">
                     <el-image class="form_image_show_wrapper" :src="$image(iii)" fit="contain"></el-image>
                   </el-upload>
                 </div>
                 <div class="form_image_wrapper mb-2 mr-2">
-                  <el-upload :auto-upload="false" :show-file-list="false" @change="(e)=>{fileChange(e,k,ik,-1)}">
+                  <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
+                             @change="(e)=>{fileChange(e,k,ik,-1)}">
                     <div class="form_image_empty_wrapper">上传图片</div>
                   </el-upload>
                 </div>
@@ -502,15 +609,30 @@ onMounted(() => {
               <Tinymce :ref="(e)=>{richTextRef(e,ik)}" :content="edit_data.form[k][ik]" :width="900"></Tinymce>
             </template>
             <template v-else-if="formType(ii.type) === 'switch'">
-              <el-switch v-model="edit_data.form[k][ik]" inline-prompt
+              <el-switch :disabled="ii.disabled" v-model="edit_data.form[k][ik]" inline-prompt
                          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
                          active-text="开启" inactive-text="关闭" active-value="1" inactive-value="0"/>
             </template>
             <template v-else-if="formType(ii.type) === 'color'">
-              <el-color-picker :predefine="predefine_config" v-model="edit_data.form[k][ik]" show-alpha/>
+              <el-color-picker :disabled="ii.disabled" :predefine="predefine_config" v-model="edit_data.form[k][ik]"
+                               show-alpha/>
+            </template>
+            <template v-else-if="formType(ii.type) === 'number'">
+              <el-input-number :disabled="ii.disabled" v-model="edit_data.form[k][ik]"
+                               :placeholder="ii.placeholder" :min="ii.min" :max="ii.max"
+                               :step="ii.step"></el-input-number>
+            </template>
+            <template v-else-if="formType(ii.type) === 'icon'">
+              <div cursor-pointer @click="iconClick(k, ik)" class="form_icon_wrapper" text-center>
+                <!--                -->
+                <el-icon>
+                  <Icon v-if="!!edit_data.form[k][ik]" :type="edit_data.form[k][ik]"></Icon>
+                </el-icon>
+              </div>
             </template>
             <template v-else>
-              <el-input v-model="edit_data.form[k][ik]" :placeholder="ii.placeholder"></el-input>
+              <el-input :disabled="ii.disabled" v-model="edit_data.form[k][ik]"
+                        :placeholder="ii.placeholder"></el-input>
             </template>
           </el-form-item>
         </el-form>
@@ -531,9 +653,16 @@ onMounted(() => {
         <template v-if="i.type === 'string'">
           <el-input v-model="search_form[k].value" :placeholder="i.placeholder"></el-input>
         </template>
+        <template v-if="i.type === 'select'">
+          <div class="form_input_wrapper">
+            <el-select v-model="search_form[k].value" :placeholder="i.placeholder">
+              <el-option v-for="(ii,ik) in i.select" :key="ik" :label="ii.label" :value="ii.value"></el-option>
+            </el-select>
+          </div>
+        </template>
         <template v-else-if="i.type === 'datetimerange'">
           <el-date-picker v-model="search_form[k].value" type="datetimerange" format="YYYY-MM-DD HH:mm:ss"
-                          value-format="YYYY-MM-DD HH:mm:ss"/>
+                          value-format="YYYY-MM-DD HH:mm:ss" class="form_input_wrapper"/>
         </template>
       </el-form-item>
       <el-form-item>
@@ -571,7 +700,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column v-for="(i,k) in database_info.list.table" :key="k" :label="i.label" :width="i.width">
           <template #default="scope">
-            <div v-if="!!scope.row[i.value]" class="table_column_wrapper" :style="{
+            <div v-if="typeof scope.row[i.value] !== 'undefined'" class="table_column_wrapper" :style="{
               width: !!i.width ? `calc(${i.width}px - 30px)` : 'calc(100% - 20px)'
             }">
               <div class="table_column_wrapper w-full" v-if="formType(i.type, scope.row, true) === 'stringArray'">
@@ -596,10 +725,10 @@ onMounted(() => {
                           class="table_column_image_wrapper" :src="$image(scope.row[i.value])" fit="contain"></el-image>
               </div>
               <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'json'">
-                <el-button @click="jsonShow(scope.row[i.value])" size="small" type="primary">查看</el-button>
+                <el-button @click="valueViewShow(scope.row[i.value], 'json')" size="small" type="primary">查看</el-button>
               </div>
               <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'richText'">
-                <el-button @click="richTextShow(scope.row[i.value])" size="small" type="primary">查看</el-button>
+                <el-button @click="valueViewShow(scope.row[i.value], 'richText')" size="small" type="primary">查看</el-button>
               </div>
               <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'switch'">
                 <div class="table_column_switch_wrapper" :style="{
@@ -617,6 +746,9 @@ onMounted(() => {
                   </el-tooltip>
                 </div>
                 <div v-else class="table_column_string_wrapper ml-2">{{ scope.row[i.value] }}</div>
+              </div>
+              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'icon'">
+                <Icon v-if="!!scope.row[i.value]" :type="scope.row[i.value]"></Icon>
               </div>
               <div class="w-full" v-else>
                 <div w-full v-if="'tooltip' in i && !!i.tooltip && valueShow(scope.row[i.value], i).length > i.tooltip">
@@ -684,6 +816,24 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   width: 100%;
+
+  .form_icon_wrapper {
+    width: 100%;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--el-input-bg-color, var(--el-fill-color-blank));
+    background-image: none;
+    border-radius: var(--el-input-border-radius, var(--el-border-radius-base));
+    transition: var(--el-transition-box-shadow);
+    transform: translate3d(0, 0, 0);
+    box-shadow: 0 0 0 1px var(--el-input-border-color, var(--el-border-color));
+  }
+
+  .form_icon_wrapper:hover {
+    box-shadow: 0 0 0 1px var(--el-border-color-hover);
+  }
 
   .form_image_array_wrapper {
     display: flex;

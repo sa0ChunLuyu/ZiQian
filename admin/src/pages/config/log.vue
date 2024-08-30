@@ -137,89 +137,55 @@ const cUrlCopyClick = (request) => {
 
     <el-card>
       <template #header>请求日志</template>
-      <div>
-        <div class="input_line_wrapper">
-          <div my-1 class="input_line_tag_wrapper">
-            <el-tag disable-transitions w-full type="info">搜索</el-tag>
-          </div>
-          <div ml-2 my-1>
-            <el-input @keydown.enter="searchClick()" class="input_line_input_wrapper" v-model="page_options.search"
-                      placeholder="请输入搜索"></el-input>
-          </div>
-          <div ml-2 my-1 class="input_line_tag_wrapper">
-            <el-tag disable-transitions w-full type="info">时间范围</el-tag>
-          </div>
-          <div ml-2 my-1>
+      <div class="log_wrapper">
+        <el-form inline>
+          <el-form-item label="时间范围">
             <el-date-picker v-model="page_options.time" type="daterange" range-separator="至"
                             start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD"/>
-          </div>
-          <div ml-2 my-1 class="input_line_tag_wrapper">
-            <el-tag disable-transitions w-full type="info">类型</el-tag>
-          </div>
-          <div ml-2 my-1>
-            <el-select v-model="page_options.method" class="input_line_input_wrapper"
-                       placeholder="请选择类型">
-              <el-option label="全部" value=""/>
-              <el-option label="POST" value="POST"/>
-              <el-option label="GET" value="GET"/>
-            </el-select>
-          </div>
-          <div ml-2 my-1 class="input_line_tag_wrapper">
-            <el-tag disable-transitions w-full type="info">返回码</el-tag>
-          </div>
-          <div ml-2 my-1>
-            <el-input @keydown.enter="searchClick()" class="input_line_input_wrapper" v-model="page_options.code"
+          </el-form-item>
+          <el-form-item label="类型">
+            <div class="form_input_wrapper">
+              <el-select v-model="page_options.method"
+                         placeholder="请选择类型">
+                <el-option label="全部" :value="``"/>
+                <el-option label="POST" value="POST"/>
+                <el-option label="GET" value="GET"/>
+              </el-select>
+            </div>
+          </el-form-item>
+          <el-form-item label="返回码">
+            <el-input @keydown.enter="searchClick()" v-model="page_options.code"
                       placeholder="请输入返回码"></el-input>
-          </div>
-          <el-button my-1 @click="searchClick()" ml-3 type="primary">搜索</el-button>
-          <el-button my-1 @click="searchClearClick()" type="warning">清空</el-button>
-        </div>
+          </el-form-item>
+          <el-form-item label="搜索">
+            <el-input @keydown.enter="searchClick()" v-model="page_options.search"
+                      placeholder="请输入搜索"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button my-1 @click="searchClick()" type="primary">搜索</el-button>
+            <el-button my-1 @click="searchClearClick()">清空</el-button>
+          </el-form-item>
+        </el-form>
         <el-table mt-1 border :data="table_list" style="width: 100%">
           <el-table-column label="身份信息" width="500">
             <template #default="scope">
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">UUID</el-tag>
-                </div>
-                <div ml-2>{{ scope.row.uuid }}</div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">Token</el-tag>
-                </div>
-                <div ml-2>{{ scope.row.token }}</div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">IP</el-tag>
-                </div>
-                <div ml-2>{{ scope.row.ip }}</div>
-              </div>
+              <el-descriptions :column="1" border>
+                <el-descriptions-item label="UUID">{{ scope.row.uuid }}</el-descriptions-item>
+                <el-descriptions-item label="Token">{{ scope.row.token }}</el-descriptions-item>
+                <el-descriptions-item label="IP">{{ scope.row.ip }}</el-descriptions-item>
+              </el-descriptions>
             </template>
           </el-table-column>
           <el-table-column label="请求信息" width="400">
             <template #default="scope">
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">Url</el-tag>
-                </div>
-                <div ml-2>{{ scope.row.url }}</div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">类型</el-tag>
-                </div>
-                <div ml-2>
+              <el-descriptions :column="1" border>
+                <el-descriptions-item label="Url">{{ scope.row.url }}</el-descriptions-item>
+                <el-descriptions-item label="类型">
                   <el-tag disable-transitions v-if="scope.row.method === 'GET'" type="success">GET</el-tag>
                   <el-tag disable-transitions v-else-if="scope.row.method === 'POST'">POST</el-tag>
                   <el-tag disable-transitions v-else type="warning">{{ scope.row.method }}</el-tag>
-                </div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">参数</el-tag>
-                </div>
-                <div ml-2>
+                </el-descriptions-item>
+                <el-descriptions-item label="参数">
                   <el-button v-if="scope.row.type === 1" :disabled="!scope.row.result"
                              @click="jsonShowClick({
                   params:JSON.parse(scope.row.params),
@@ -251,38 +217,24 @@ const cUrlCopyClick = (request) => {
                   })"
                              type="success" size="small">复制cURL
                   </el-button>
-                </div>
-              </div>
+                </el-descriptions-item>
+              </el-descriptions>
             </template>
           </el-table-column>
           <el-table-column label="处理信息" width="250">
             <template #default="scope">
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">存储类型</el-tag>
-                </div>
-                <div ml-2>
-                  <el-tag disable-transitions :type="scope.row.type === 1 ? '' : 'success'">{{
-                      scope.row.type === 1 ? '数据库' : '文件'
-                    }}
+              <el-descriptions :column="1" border>
+                <el-descriptions-item label="存储类型">
+                  <el-tag disable-transitions :type="scope.row.type === 1 ? '' : 'success'">
+                    {{ scope.row.type === 1 ? '数据库' : '文件' }}
                   </el-tag>
-                </div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">返回码</el-tag>
-                </div>
-                <div ml-2>
+                </el-descriptions-item>
+                <el-descriptions-item label="返回码">
                   <el-tag disable-transitions :type="Number(scope.row.code) === 200 ? 'success' : 'warning'">
                     {{ !!scope.row.code ? scope.row.code : '未处理完成' }}
                   </el-tag>
-                </div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">返回</el-tag>
-                </div>
-                <div ml-2>
+                </el-descriptions-item>
+                <el-descriptions-item label="返回">
                   <el-button v-if="scope.row.type === 1" :disabled="!scope.row.result"
                              @click="jsonShowClick(JSON.parse(scope.row.result))"
                              type="primary" size="small">查看
@@ -294,30 +246,19 @@ const cUrlCopyClick = (request) => {
                   })"
                              type="primary" size="small">查看
                   </el-button>
-                </div>
-              </div>
+                </el-descriptions-item>
+              </el-descriptions>
             </template>
           </el-table-column>
           <el-table-column label="处理时间">
             <template #default="scope">
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">请求时间</el-tag>
-                </div>
-                <div ml-2>{{ scope.row.created_at }}</div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">返回时间</el-tag>
-                </div>
-                <div ml-2>{{ scope.row.updated_at }}</div>
-              </div>
-              <div my-1 class="input_line_wrapper">
-                <div class="input_line_tag_wrapper">
-                  <el-tag disable-transitions w-full type="info">执行速度</el-tag>
-                </div>
-                <div ml-2>{{ !!scope.row.spend ? `${scope.row.spend}` : '0' }}s</div>
-              </div>
+              <el-descriptions :column="1" border>
+                <el-descriptions-item label="请求时间">{{ scope.row.created_at }}</el-descriptions-item>
+                <el-descriptions-item label="返回时间">{{ scope.row.updated_at }}</el-descriptions-item>
+                <el-descriptions-item label="执行速度">
+                  {{ !!scope.row.spend ? `${scope.row.spend}` : '0' }}s
+                </el-descriptions-item>
+              </el-descriptions>
             </template>
           </el-table-column>
         </el-table>
@@ -327,7 +268,33 @@ const cUrlCopyClick = (request) => {
     </el-card>
   </div>
 </template>
-<style>
+<style lang="scss">
+.log_wrapper {
+  .el-table {
+    .el-table__body-wrapper {
+      .el-table__cell {
+        padding: 0 !important;
+
+        .cell {
+          padding: 0 !important;
+        }
+      }
+    }
+  }
+
+  .el-descriptions {
+    --el-descriptions-table-border: 0px !important;
+
+    .el-descriptions__label {
+      width: 100px;
+      border-right: 1px solid #ebeef5 !important;
+    }
+
+    .el-descriptions__content {
+      height: 42px;
+    }
+  }
+}
 
 </style>
 <style scoped>

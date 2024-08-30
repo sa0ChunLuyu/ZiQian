@@ -68,11 +68,25 @@ class QuickDatabaseController extends Controller
     $quick_database = QuickDatabase::where('database', $database)->first();
     if (!$quick_database) Zi::eco(100001, ['数据库']);
     self::self_checkAuth($quick_database);
+    $list_config = json_decode($quick_database->list, true);
+    if (isset($list_config['delete'])) {
+      foreach ($ids as $id) {
+        $db = DB::table($database);
+        foreach ($list_config['delete']['where'] as $delete) {
+          if ($delete[2] == '##DELETE-VALUE##') {
+            $delete[2] = $id;
+          }
+          $db->where($delete[0], $delete[1], $delete[1] == 'like' ? '%' . $delete[2] . '%' : $delete[2]);
+        }
+        $delete_check = $db->count();
+        if ($delete_check > 0) Zi::eco(100022, [$list_config['delete']['message']]);
+      }
+    }
     if ($quick_database->del === '') {
       DB::table($database)->whereIn('id', $ids)->delete();
     } else {
       $del_config = explode(':', $quick_database->del);
-      DB::table($database)->where('ids', $ids)->update([
+      DB::table($database)->whereIn('id', $ids)->update([
         $del_config[0] => $del_config[1],
         'updated_at' => ZiQian::date()
       ]);
@@ -97,6 +111,12 @@ class QuickDatabaseController extends Controller
     $list_config = json_decode($quick_database->list, true);
     $data = DB::table($database)->select($list_config['select']);
     $search_rules = json_decode($quick_database->search, true);
+    foreach ($search_rules as $key => $search_rule) {
+      if ($search_rule['type'] === 'database_select') {
+        $search_rules[$key]['type'] = 'select';
+        $search_rules[$key]['select'] = self::self_databaseSelect($search_rule);
+      }
+    }
     foreach ($search_rules as $label => $search_rule) {
       if (isset($search[$label])) {
         $range_array = ['datetimerange', 'daterange', 'timerange'];
@@ -120,7 +140,7 @@ class QuickDatabaseController extends Controller
             }
           }
         } else {
-          if (!!$search[$label]) {
+          if ($search[$label] != '') {
             $value = $search[$label];
             $where_array = $search_rule['where'];
             $data->where(function ($query) use ($value, $where_array) {
@@ -136,6 +156,13 @@ class QuickDatabaseController extends Controller
             });
           }
         }
+      }
+    }
+    if (isset($list_config['where'])) {
+      foreach ($list_config['where'] as $where) {
+        $data->where(function ($query) use ($where) {
+          $query->where($where[0], $where[1], $where[1] == 'like' ? '%' . $where[2] . '%' : $where[2]);
+        });
       }
     }
     foreach ($list_config['order'] as $order) {
@@ -162,14 +189,50 @@ class QuickDatabaseController extends Controller
     $quick_database = QuickDatabase::where('database', $database)->first();
     if (!$quick_database) Zi::eco(100001, ['数据库']);
     self::self_checkAuth($quick_database);
+
+    $form_groups = json_decode($quick_database->form, true);
+    foreach ($form_groups as $key => $forms) {
+      foreach ($forms as $k => $form) {
+        if ($form['type'] === 'database_select') {
+          $form_groups[$key][$k]['type'] = 'select';
+          $form_groups[$key][$k]['select'] = self::self_databaseSelect($form);
+        }
+      }
+    }
+    $search_array = json_decode($quick_database->search, true);
+    foreach ($search_array as $key => $search) {
+      if ($search['type'] === 'database_select') {
+        $search_array[$key]['type'] = 'select';
+        $search_array[$key]['select'] = self::self_databaseSelect($search);
+      }
+    }
+
     return Zi::echo([
       'info' => [
         'list' => json_decode($quick_database->list, true),
-        'search' => json_decode($quick_database->search, true),
-        'form' => json_decode($quick_database->form, true),
+        'search' => $search_array,
+        'form' => $form_groups,
         'request' => json_decode($quick_database->request, true),
       ]
     ]);
+  }
+
+  public function self_databaseSelect($config)
+  {
+    $select = $config['select'];
+    $database = $config['database'];
+    $db = DB::table($database['name'])->select([
+      DB::raw('`' . $database['value'] . '` as `value`'),
+      DB::raw('`' . $database['label'] . '` as `label`')
+    ]);
+    foreach ($database['where'] as $where) {
+      $db->where($where[0], $where[1], $where[1] == 'like' ? '%' . $where[2] . '%' : $where[2]);
+    }
+    foreach ($database['order'] as $order) {
+      $db->orderBy($order['label'], $order['type']);
+    }
+    $list = $db->get()->toArray();
+    return array_merge($select, $list);
   }
 
   public function self_checkRequest($quick_database, &$data, $id)
@@ -185,8 +248,12 @@ class QuickDatabaseController extends Controller
           break;
         }
       }
-      if (!isset($data[$label]) || !$data[$label]) {
+      if (!isset($data[$label])) {
         $data[$label] = $form[$form_index][$label]['value'];
+      } else if ((string)$data[$label] != '0') {
+        if ($data[$label] == null || $data[$label] == '') {
+          $data[$label] = $form[$form_index][$label]['value'];
+        }
       }
       foreach ($rule['check'] as $check) {
         $message = $check['message'];
@@ -212,6 +279,20 @@ class QuickDatabaseController extends Controller
 
           if (isset($check['select'])) {
             if (!in_array($data[$label], $check['select'])) Zi::eco($code, [$message]);
+          }
+
+          if (isset($check['unique']) && !!$check['unique']) {
+            $unique = DB::table($quick_database->database)
+              ->where($label, $data[$label])
+              ->where('id', '!=', $id)
+              ->first();
+            if (!!$unique) Zi::eco($code, [$message]);
+          }
+
+          if (isset($check['php'])) {
+            $check_ret = true;
+            eval($check['php']);
+            if (!$check_ret) Zi::eco($code, [$message]);
           }
         }
       }

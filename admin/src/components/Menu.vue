@@ -54,13 +54,15 @@ const menuItemClick = (name) => {
             <el-sub-menu v-if="i.children.length > 1" :index="i.name" :disabled="i.status === 2">
               <template #title>
                 <el-icon>
-                  <Icon :type="i.icon"></Icon>
+                  <Icon v-if="!!i.icon" :type="i.icon"></Icon>
+                  <Icon v-else type="dot"></Icon>
                 </el-icon>
                 <span>{{ i.title }}</span>
               </template>
               <el-menu-item v-for="(ii,kk) in i.children" :index="ii.name" :key="kk" :disabled="ii.status === 2">
                 <el-icon>
-                  <Icon :type="ii.icon"></Icon>
+                  <Icon v-if="!!ii.icon" :type="ii.icon"></Icon>
+                  <Icon v-else type="dot"></Icon>
                 </el-icon>
                 <span>{{ ii.title }}</span>
               </el-menu-item>
@@ -68,7 +70,8 @@ const menuItemClick = (name) => {
             <el-menu-item v-if="i.children.length === 1" :index="i.children[0].name"
                           :disabled="i.status === 2 || i.children[0].status === 2">
               <el-icon>
-                <Icon :type="i.children[0].icon"></Icon>
+                <Icon v-if="!!i.children[0].icon" :type="i.children[0].icon"></Icon>
+                <Icon v-else type="dot"></Icon>
               </el-icon>
               <span>{{ i.children[0].title }}</span>
             </el-menu-item>

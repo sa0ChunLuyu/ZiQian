@@ -13,7 +13,7 @@
         <QuickDatabase database="configs">
           <template v-slot:header>
             <div class="mb-2">
-              <el-alert title="以下配置轻易勿动！请在您已完全了解知晓其配置具体含义之后再进行操作！！！" type="error" :closable="false"/>
+              <el-alert title="以下配置轻易勿动！请在您已完全了解并知晓其配置具体含义之后再进行操作！！！" type="error" :closable="false"/>
             </div>
           </template>
         </QuickDatabase>
