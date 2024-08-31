@@ -125,7 +125,7 @@ const editDone = async () => {
       <div>
         <QuickDatabase ref="quick_database_ref" database="admin_auth_groups">
           <template v-slot:buttonLeft>
-            <el-button @click="editClick()" :disabled="table_list_active.length !== 1" type="warning">
+            <el-button class="ml-3" @click="editClick()" :disabled="table_list_active.length !== 1" type="warning">
               编辑权限
             </el-button>
           </template>

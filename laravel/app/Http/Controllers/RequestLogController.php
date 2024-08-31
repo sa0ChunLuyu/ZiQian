@@ -63,6 +63,7 @@ class RequestLogController extends Controller
     $content_arr = explode("\n", $content);
     return $content_arr[count($content_arr) - 1 - $index];
   }
+
   /***auto route
    * name: list
    * type: admin
@@ -82,7 +83,7 @@ class RequestLogController extends Controller
       date('Y-m', strtotime($start_time)),
       date('Y-m', strtotime($end_time)),
     ];
-    if ($ym_check[0] !== $ym_check[1]) Zi::eco(100024);
+    if ($ym_check[0] !== $ym_check[1]) Zi::eco(100023);
     $table_name = 'zz_request_log_' . date('ym', strtotime($start_time));
     $table_count = DB::select('select count(1) as c from information_schema.TABLES where table_schema = ? and table_name = ?', [env('DB_DATABASE'), $table_name])[0];
     if ($table_count->c === 0) Zi::eco(100001, ['日志表']);
@@ -93,13 +94,13 @@ class RequestLogController extends Controller
         ->orWhere('ip', $search);
     })
       ->where(function ($query) use ($start_time) {
-        if ($start_time != '') $query->where('created_at', '>=', $start_time);
+        if ($start_time != '') $query->where('created_at', '>=', $start_time . ' 00:00:00');
       })
       ->where(function ($query) use ($end_time) {
-        if ($end_time != '') $query->where('created_at', '<=', $end_time);
+        if ($end_time != '') $query->where('created_at', '<=', $end_time . ' 23:59:59');
       })
       ->where(function ($query) use ($method) {
-        if ($method != '') $query->where('method', $method);
+        if ($method != '' && $method != 'null') $query->where('method', $method);
       })
       ->where(function ($query) use ($code) {
         if ($code != '') $query->where('code', $code);

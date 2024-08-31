@@ -539,7 +539,7 @@ onMounted(() => {
           <el-form-item v-for="(ii,ik) in database_info.form[k]" :key="ik" :label="ii.label">
             <template v-if="formType(ii.type) === 'select'">
               <el-select @change="(e)=>{formSelectChange(e,k,ik)}" v-model="edit_data.form[k][ik]"
-                         :placeholder="ii.placeholder" :disabled="ii.disabled">
+                         :empty-values="[null, undefined]" :placeholder="ii.placeholder" :disabled="ii.disabled">
                 <el-option v-for="(iii,iik) in ii.select" :key="iik" :label="iii.label"
                            :value="iii.value"></el-option>
               </el-select>
@@ -624,7 +624,6 @@ onMounted(() => {
             </template>
             <template v-else-if="formType(ii.type) === 'icon'">
               <div cursor-pointer @click="iconClick(k, ik)" class="form_icon_wrapper" text-center>
-                <!--                -->
                 <el-icon>
                   <Icon v-if="!!edit_data.form[k][ik]" :type="edit_data.form[k][ik]"></Icon>
                 </el-icon>
@@ -655,13 +654,16 @@ onMounted(() => {
         </template>
         <template v-if="i.type === 'select'">
           <div class="form_input_wrapper">
-            <el-select v-model="search_form[k].value" :placeholder="i.placeholder">
+            <el-select :empty-values="[null, undefined]" v-model="search_form[k].value" :placeholder="i.placeholder">
               <el-option v-for="(ii,ik) in i.select" :key="ik" :label="ii.label" :value="ii.value"></el-option>
             </el-select>
           </div>
         </template>
         <template v-else-if="i.type === 'datetimerange'">
-          <el-date-picker v-model="search_form[k].value" type="datetimerange" format="YYYY-MM-DD HH:mm:ss"
+          <el-date-picker v-model="search_form[k].value"
+                          start-placeholder="开始时间"
+                          end-placeholder="结束时间"
+                          type="datetimerange" format="YYYY-MM-DD HH:mm:ss"
                           value-format="YYYY-MM-DD HH:mm:ss" class="form_input_wrapper"/>
         </template>
       </el-form-item>
@@ -682,7 +684,7 @@ onMounted(() => {
           <el-button v-if="database_info.list.button.includes('delete')" :disabled="table_list_active.length === 0"
                      @click="deleteClick()" type="danger">删除
           </el-button>
-          <div class="ml-3">
+          <div>
             <slot name="buttonLeft"></slot>
           </div>
         </div>
@@ -692,72 +694,22 @@ onMounted(() => {
         </div>
       </div>
       <el-table mt-2 border :data="table_list" style="width: 100%">
-        <el-table-column label="" width="40">
+        <el-table-column v-if="!('checkbox' in database_info.list) || !!database_info.list.checkbox" label=""
+                         width="40">
           <template #default="scope">
             <el-checkbox @change="editActiveChange(scope.$index)"
                          v-model="table_list[scope.$index].EDIT_ACTIVE"></el-checkbox>
           </template>
         </el-table-column>
-        <el-table-column v-for="(i,k) in database_info.list.table" :key="k" :label="i.label" :width="i.width">
+        <el-table-column :class-name="i.type === 'desc' ? 'table_desc_wrapper' : ''"
+                         v-for="(i,k) in database_info.list.table" :key="k"
+                         :label="i.label" :width="i.width">
           <template #default="scope">
-            <div v-if="typeof scope.row[i.value] !== 'undefined'" class="table_column_wrapper" :style="{
+            <div v-if="['file', 'desc'].includes(i.type) || typeof scope.row[i.value] !== 'undefined'" :style="{
               width: !!i.width ? `calc(${i.width}px - 30px)` : 'calc(100% - 20px)'
             }">
-              <div class="table_column_wrapper w-full" v-if="formType(i.type, scope.row, true) === 'stringArray'">
-                <div w-full
-                     v-if="'tooltip' in i && !!i.tooltip && JSON.parse(scope.row[i.value]).join(' ').length > i.tooltip">
-                  <el-tooltip effect="dark" :content="JSON.parse(scope.row[i.value]).join(' ')" placement="top">
-                    <div class="table_column_string_wrapper">{{ JSON.parse(scope.row[i.value]).join(' ') }}</div>
-                  </el-tooltip>
-                </div>
-                <div v-else class="table_column_string_wrapper">{{ JSON.parse(scope.row[i.value]).join(' ') }}</div>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'imageArray'">
-                <div class="mr-2" v-for="(ii,ik) in JSON.parse(scope.row[i.value])">
-                  <el-image :key="ik" v-if="ik < 3" preview-teleported :initial-index="ik"
-                            :preview-src-list="JSON.parse(scope.row[i.value]).map((item)=>$image(item))"
-                            class="table_column_image_wrapper" :src="$image(ii)" fit="contain"></el-image>
-                </div>
-                <span v-if="JSON.parse(scope.row[i.value]).length > 3">...</span>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'image'">
-                <el-image preview-teleported :previewSrcList="[$image(scope.row[i.value])]"
-                          class="table_column_image_wrapper" :src="$image(scope.row[i.value])" fit="contain"></el-image>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'json'">
-                <el-button @click="valueViewShow(scope.row[i.value], 'json')" size="small" type="primary">查看</el-button>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'richText'">
-                <el-button @click="valueViewShow(scope.row[i.value], 'richText')" size="small" type="primary">查看</el-button>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'switch'">
-                <div class="table_column_switch_wrapper" :style="{
-                  background: scope.row[i.value] === '1' ? '#13ce66' : '#ff4949'
-                }">{{ scope.row[i.value] === '1' ? '开启' : '关闭' }}
-                </div>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'color'">
-                <div class="table_column_color_wrapper" :style="{
-                  background: scope.row[i.value]
-                }"></div>
-                <div w-full v-if="'tooltip' in i && !!i.tooltip && scope.row[i.value].length > i.tooltip">
-                  <el-tooltip effect="dark" :content="scope.row[i.value]" placement="top">
-                    <div class="table_column_string_wrapper ml-2">{{ scope.row[i.value] }}</div>
-                  </el-tooltip>
-                </div>
-                <div v-else class="table_column_string_wrapper ml-2">{{ scope.row[i.value] }}</div>
-              </div>
-              <div class="table_column_wrapper w-full" v-else-if="formType(i.type, scope.row, true) === 'icon'">
-                <Icon v-if="!!scope.row[i.value]" :type="scope.row[i.value]"></Icon>
-              </div>
-              <div class="w-full" v-else>
-                <div w-full v-if="'tooltip' in i && !!i.tooltip && valueShow(scope.row[i.value], i).length > i.tooltip">
-                  <el-tooltip effect="dark" :content="valueShow(scope.row[i.value], i)" placement="top">
-                    <div class="table_column_string_wrapper">{{ valueShow(scope.row[i.value], i) }}</div>
-                  </el-tooltip>
-                </div>
-                <div v-else class="table_column_string_wrapper">{{ valueShow(scope.row[i.value], i) }}</div>
-              </div>
+              <QuickDatabaseShow :type="formType(i.type, scope.row, true)" :column="i" :row="scope.row"
+                                 :form="database_info.form"></QuickDatabaseShow>
             </div>
           </template>
         </el-table-column>
@@ -767,40 +719,18 @@ onMounted(() => {
     </div>
   </div>
 </template>
-<style scoped>
-.table_column_wrapper {
-  display: flex;
-  align-items: center;
+<style>
+.el-table__body {
+  .table_desc_wrapper {
+    padding: 0 !important;
 
-  .table_column_string_wrapper {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .table_column_image_wrapper {
-    width: 40px;
-    height: 40px;
-  }
-
-  .table_column_color_wrapper {
-    height: 20px;
-    font-size: 14px;
-    width: 20px;
-    text-align: center;
-    display: inline-block;
-  }
-
-  .table_column_switch_wrapper {
-    height: 20px;
-    line-height: 20px;
-    font-size: 14px;
-    width: 60px;
-    text-align: center;
-    color: #ffffff;
+    .cell {
+      padding: 0 !important;
+    }
   }
 }
-
+</style>
+<style scoped>
 .table_button_wrapper {
   display: flex;
   align-items: center;

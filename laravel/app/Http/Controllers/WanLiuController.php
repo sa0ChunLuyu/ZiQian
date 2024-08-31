@@ -6,15 +6,15 @@ use App\Models\Upload;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Yo;
-use Login;
+use App\Lib\Zi;
+use App\Lib\Token;
 use GuzzleHttp\Client;
 
 class WanLiuController extends Controller
 {
   public function get(Request $request)
   {
-    self::check('GET');
+    self::self_check('GET');
     $url = $request->post('url');
     $push_header = $request->post('push_header');
     $headers = [
@@ -28,17 +28,17 @@ class WanLiuController extends Controller
     return $res->getBody();
   }
 
-  public function check($check_type)
+  public function self_check($check_type)
   {
     $request = request();
     $token = $request->post('token');
-    if (!$token) Yo::error_echo(100002);
+    if (!$token) Zi::eco(100002);
     $token_appid = $request->post('token_appid');
     $app_id = env('APP_ID');
-    if ($app_id == 'wlxxxxxxxx-xxxx') Yo::error_echo(100034, [$check_type . '权限']);
-    if ($app_id != $token_appid) Yo::error_echo(100034, [$check_type . '权限']);
+    if ($app_id == 'wlxxxxxxxx-xxxx') Zi::eco(100024, [$check_type . '权限']);
+    if ($app_id != $token_appid) Zi::eco(100024, [$check_type . '权限']);
     $token_time = $request->post('token_time');
-    if (time() - (60 * 3) > $token_time) Yo::error_echo(100034, [$check_type . '权限']);
+    if (time() - (60 * 3) > $token_time) Zi::eco(100024, [$check_type . '权限']);
     $token_noise = $request->post('token_noise');
     $app_secret = env('APP_SECRET');
     $sign = [
@@ -48,12 +48,16 @@ class WanLiuController extends Controller
       'noise' => $token_noise,
     ];
     $true_token = md5(json_encode($sign, JSON_UNESCAPED_UNICODE));
-    if ($true_token != $token) Yo::error_echo(100034, [$check_type . '权限']);
+    if ($true_token != $token) Zi::eco(100024, [$check_type . '权限']);
   }
-
+  /***auto route
+   * name: token
+   * type: open
+   * method: post
+   */
   public function token()
   {
-    Login::admin(['config-upload']);
+    Token::admin(['config-upload']);
     $app_id = env('APP_ID');
     $app_secret = env('APP_SECRET');
     $time = (string)time();
@@ -65,7 +69,7 @@ class WanLiuController extends Controller
       'noise' => $noise,
     ];
     $token = md5(json_encode($sign, JSON_UNESCAPED_UNICODE));
-    return Yo::echo([
+    return Zi::echo([
       'token' => $token,
       'token_appid' => $app_id,
       'token_time' => $time,
@@ -73,18 +77,22 @@ class WanLiuController extends Controller
     ]);
   }
 
+  /***auto route
+   * name: upload
+   * type: open
+   * method: post
+   */
   public function upload(Request $request)
   {
-
-    self::check('上传文件');
+    self::self_check('上传文件');
     $type = $request->post('type');
     $disk = Storage::disk('public');
     $file_name = $request->post('file_name');
     $file_name_arr = explode('.', $file_name);
-    if (count($file_name_arr) < 2) Yo::error_echo(100034, ['文件后缀名']);
+    if (count($file_name_arr) < 2) Zi::eco(100024, ['文件后缀名']);
     $file_ext = $file_name_arr[count($file_name_arr) - 1];
     $error_type_arr = [];
-    if (in_array($file_ext, $error_type_arr)) Yo::error_echo(100035, [$file_ext]);
+    if (in_array($file_ext, $error_type_arr)) Zi::eco(100025, [$file_ext]);
     if ($type == 'Multipart') {
       $md5 = $request->post('md5');
       $upload = Upload::where('md5', $md5)->first();
@@ -102,7 +110,7 @@ class WanLiuController extends Controller
           }
           for ($i = 0; $i < count($multipart_arr); $i++) {
             if (!in_array($i + 1, $multipart_arr)) {
-              Yo::error_echo(100034, ['文件完整性']);
+              Zi::eco(100024, ['文件完整性']);
             }
           }
           $name = Str::orderedUuid();
@@ -120,7 +128,7 @@ class WanLiuController extends Controller
           $file_md5 = md5_file($output_file_path);
           if ($file_md5 != $md5) {
             unlink($output_file_path);
-            Yo::error_echo(100034, ['文件完整性']);
+            Zi::eco(100024, ['文件完整性']);
           }
           for ($i = 0; $i < count($multipart_arr); $i++) {
             $chunk_index = $i + 1;
@@ -139,7 +147,7 @@ class WanLiuController extends Controller
           $upload->ext = $file_ext;
           $upload->md5 = $md5;
           $upload->save();
-          return Yo::echo([
+          return Zi::echo([
             'url' => $upload->url
           ]);
         } else {
@@ -152,12 +160,12 @@ class WanLiuController extends Controller
               $multipart_arr[] = (int)$matches[1];
             }
           }
-          return Yo::echo([
+          return Zi::echo([
             'list' => $multipart_arr,
           ]);
         }
       } else {
-        return Yo::echo([
+        return Zi::echo([
           'url' => $upload->url
         ]);
       }
@@ -184,7 +192,7 @@ class WanLiuController extends Controller
         $upload->md5 = $md5;
         $upload->save();
       }
-      return Yo::echo([
+      return Zi::echo([
         'url' => $upload->url
       ]);
     }

@@ -22,9 +22,9 @@ class ApiController extends Controller
     if (in_array($client, $client_array)) {
       $route_map = ZiQian::auto_route();
       foreach ($route_map as $item) {
-        if ($item['type'] == $client) {
-          $key = ucfirst($client) . $item['class'] . ucfirst($item['name']);
-          $url = $base_url . '/api/' . ucfirst($client) . '/' . $item['class'] . '/' . $item['name'] . $item['param'] . $item['query'];
+        if ($item['type'] == $client || $item['type'] == 'open') {
+          $key = ucfirst($item['type']) . $item['class'] . ucfirst($item['name']);
+          $url = $base_url . '/api/' . ucfirst($item['type']) . '/' . $item['class'] . '/' . $item['name'] . $item['param'] . $item['query'];
           $route[$key] = $url;
         }
       }

@@ -13,64 +13,6 @@ use App\Lib\Token;
 class UploadController extends Controller
 {
   /***auto route
-   * name: search
-   * type: admin
-   * method: post
-   */
-  public function search()
-  {
-    $ext = Upload::select('ext')->groupBy('ext')->get();
-    $from = ['AdminImage'];
-    return Zi::echo([
-      'ext' => $ext,
-      'from' => $from,
-    ]);
-  }
-
-  /***auto route
-   * name: list
-   * type: admin
-   * method: post
-   */
-  public function list(Request $request)
-  {
-    Token::admin(['config-upload']);
-    $search = $request->post('search');
-    $time = $request->post('time');
-    $start_time = !!$time[0] ? ZiQian::date(strtotime($time[0] . ' 00:00:00')) : '';
-    $end_time = !!$time[1] ? ZiQian::date(strtotime($time[1] . ' 23:59:59')) : '';
-    $ext = $request->post('ext');
-    $from = $request->post('from');
-    $from_map = [
-      'AdminImage' => '/api/Admin/Upload/image',
-    ];
-    $from_search = '';
-    if (!!$from) $from_search = $from_map[$from];
-    $upload_list = Upload::where(function ($query) use ($search) {
-      if ($search != '') $query->where('uuid', $search)
-        ->orWhere('name', $search)
-        ->orWhere('md5', $search);
-    })
-      ->where(function ($query) use ($start_time) {
-        if ($start_time != '') $query->where('created_at', '>=', $start_time);
-      })
-      ->where(function ($query) use ($end_time) {
-        if ($end_time != '') $query->where('created_at', '<=', $end_time);
-      })
-      ->where(function ($query) use ($ext) {
-        if ($ext != '') $query->where('ext', $ext);
-      })
-      ->where(function ($query) use ($from_search) {
-        if ($from_search != '') $query->where('from', $from_search);
-      })
-      ->orderBy('id', 'desc')
-      ->paginate(20);
-    return Zi::echo([
-      'list' => $upload_list
-    ]);
-  }
-
-  /***auto route
    * name: delete
    * type: admin
    * method: post

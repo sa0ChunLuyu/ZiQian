@@ -225,11 +225,20 @@ class QuickDatabaseController extends Controller
       DB::raw('`' . $database['value'] . '` as `value`'),
       DB::raw('`' . $database['label'] . '` as `label`')
     ]);
-    foreach ($database['where'] as $where) {
-      $db->where($where[0], $where[1], $where[1] == 'like' ? '%' . $where[2] . '%' : $where[2]);
+    if (isset($database['where'])) {
+      foreach ($database['where'] as $where) {
+        $db->where($where[0], $where[1], $where[1] == 'like' ? '%' . $where[2] . '%' : $where[2]);
+      }
     }
-    foreach ($database['order'] as $order) {
-      $db->orderBy($order['label'], $order['type']);
+    if (isset($database['group'])) {
+      foreach ($database['group'] as $group) {
+        $db->groupBy($group);
+      }
+    }
+    if (isset($database['order'])) {
+      foreach ($database['order'] as $order) {
+        $db->orderBy($order['label'], $order['type']);
+      }
     }
     $list = $db->get()->toArray();
     return array_merge($select, $list);

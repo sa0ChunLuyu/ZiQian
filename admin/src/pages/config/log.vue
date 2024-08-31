@@ -145,9 +145,8 @@ const cUrlCopyClick = (request) => {
           </el-form-item>
           <el-form-item label="类型">
             <div class="form_input_wrapper">
-              <el-select v-model="page_options.method"
-                         placeholder="请选择类型">
-                <el-option label="全部" :value="``"/>
+              <el-select v-model="page_options.method" :empty-values="[null, undefined]" placeholder="请选择类型">
+                <el-option label="全部" value=""/>
                 <el-option label="POST" value="POST"/>
                 <el-option label="GET" value="GET"/>
               </el-select>
@@ -167,7 +166,7 @@ const cUrlCopyClick = (request) => {
           </el-form-item>
         </el-form>
         <el-table mt-1 border :data="table_list" style="width: 100%">
-          <el-table-column label="身份信息" width="500">
+          <el-table-column label="身份信息" width="420">
             <template #default="scope">
               <el-descriptions :column="1" border>
                 <el-descriptions-item label="UUID">{{ scope.row.uuid }}</el-descriptions-item>
@@ -176,32 +175,33 @@ const cUrlCopyClick = (request) => {
               </el-descriptions>
             </template>
           </el-table-column>
-          <el-table-column label="请求信息" width="400">
+          <el-table-column label="请求信息">
             <template #default="scope">
-              <el-descriptions :column="1" border>
-                <el-descriptions-item label="Url">{{ scope.row.url }}</el-descriptions-item>
-                <el-descriptions-item label="类型">
-                  <el-tag disable-transitions v-if="scope.row.method === 'GET'" type="success">GET</el-tag>
-                  <el-tag disable-transitions v-else-if="scope.row.method === 'POST'">POST</el-tag>
-                  <el-tag disable-transitions v-else type="warning">{{ scope.row.method }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="参数">
-                  <el-button v-if="scope.row.type === 1" :disabled="!scope.row.result"
-                             @click="jsonShowClick({
+              <div class="descriptions_short_label_wrapper">
+                <el-descriptions :column="1" border>
+                  <el-descriptions-item label="Url">{{ scope.row.url }}</el-descriptions-item>
+                  <el-descriptions-item label="类型">
+                    <el-tag disable-transitions v-if="scope.row.method === 'GET'" type="success">GET</el-tag>
+                    <el-tag disable-transitions v-else-if="scope.row.method === 'POST'" type="primary">POST</el-tag>
+                    <el-tag disable-transitions v-else type="warning">{{ scope.row.method }}</el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="参数">
+                    <el-button v-if="scope.row.type === 1" :disabled="!scope.row.result"
+                               @click="jsonShowClick({
                   params:JSON.parse(scope.row.params),
                   input:JSON.parse(scope.row.input),
                   header:JSON.parse(scope.row.header),
                   })" type="primary" size="small">查看
-                  </el-button>
-                  <el-button v-else @click="txtShowClick({
+                    </el-button>
+                    <el-button v-else @click="txtShowClick({
                   id:scope.row.id,
                   created_at:scope.row.created_at,
                   type:'input'
                   })"
-                             type="primary" size="small">查看
-                  </el-button>
-                  <el-button v-if="scope.row.type === 1" :disabled="!scope.row.result"
-                             @click="cUrlCopyClick({
+                               type="primary" size="small">查看
+                    </el-button>
+                    <el-button v-if="scope.row.type === 1" :disabled="!scope.row.result"
+                               @click="cUrlCopyClick({
                   url:scope.row.url,
                   method:scope.row.method,
                   params:JSON.parse(scope.row.params),
@@ -209,23 +209,24 @@ const cUrlCopyClick = (request) => {
                   header:JSON.parse(scope.row.header),
                   result:JSON.parse(scope.row.result),
                   })" type="success" size="small">复制cURL
-                  </el-button>
-                  <el-button v-else @click="cUrlJsonCopyClick({
+                    </el-button>
+                    <el-button v-else @click="cUrlJsonCopyClick({
                   id:scope.row.id,
                   created_at:scope.row.created_at,
                   type:'curl'
                   })"
-                             type="success" size="small">复制cURL
-                  </el-button>
-                </el-descriptions-item>
-              </el-descriptions>
+                               type="success" size="small">复制cURL
+                    </el-button>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column label="处理信息" width="250">
+          <el-table-column label="处理信息" width="190">
             <template #default="scope">
               <el-descriptions :column="1" border>
                 <el-descriptions-item label="存储类型">
-                  <el-tag disable-transitions :type="scope.row.type === 1 ? '' : 'success'">
+                  <el-tag disable-transitions :type="scope.row.type === 1 ? 'primary' : 'success'">
                     {{ scope.row.type === 1 ? '数据库' : '文件' }}
                   </el-tag>
                 </el-descriptions-item>
@@ -250,7 +251,7 @@ const cUrlCopyClick = (request) => {
               </el-descriptions>
             </template>
           </el-table-column>
-          <el-table-column label="处理时间">
+          <el-table-column label="处理时间" width="250">
             <template #default="scope">
               <el-descriptions :column="1" border>
                 <el-descriptions-item label="请求时间">{{ scope.row.created_at }}</el-descriptions-item>
@@ -282,16 +283,23 @@ const cUrlCopyClick = (request) => {
     }
   }
 
+
   .el-descriptions {
     --el-descriptions-table-border: 0px !important;
 
     .el-descriptions__label {
-      width: 100px;
+      width: 79px;
       border-right: 1px solid #ebeef5 !important;
     }
 
     .el-descriptions__content {
       height: 42px;
+    }
+  }
+
+  .descriptions_short_label_wrapper {
+    .el-descriptions__label {
+      width: 51px;
     }
   }
 }
