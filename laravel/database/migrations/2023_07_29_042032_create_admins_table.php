@@ -11,7 +11,7 @@ return new class extends Migration {
   public function up(): void
   {
     Schema::create('admins', function (Blueprint $table) {
-      $table->id()->comment('db disable');
+      $table->id();
       $table->string('nickname', 50)->comment('名称');
       $table->string('avatar', 200)->default('')->comment('头像');
       $table->integer('admin_auth_group')->comment('权限组ID')->index();

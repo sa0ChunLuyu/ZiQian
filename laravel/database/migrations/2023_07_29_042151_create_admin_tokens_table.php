@@ -11,7 +11,7 @@ return new class extends Migration {
   public function up(): void
   {
     Schema::create('admin_tokens', function (Blueprint $table) {
-      $table->id()->comment('db disable');
+      $table->id();
       $table->bigInteger('admin')->index()->comment('账号ID');
       $table->string('token', 50)->comment('TOKEN')->index();
       $table->string('ip', 20)->comment('IP')->index();

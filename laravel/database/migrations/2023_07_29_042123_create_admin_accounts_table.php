@@ -11,7 +11,7 @@ return new class extends Migration {
   public function up(): void
   {
     Schema::create('admin_accounts', function (Blueprint $table) {
-      $table->id()->comment('db disable');
+      $table->id();
       $table->bigInteger('admin')->index();
       $table->string('account', 50)->index();
       $table->string('secret', 80);
