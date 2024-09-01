@@ -55,21 +55,19 @@ class PushConfigData extends Migration
       'type' => 'switch',
       'client' => '1',
       'login' => '2',
-      'remark' => '',
     ], [
       'name' => '后台IP地区信息',
       'value' => '1',
       'type' => 'switch',
       'client' => '1',
       'login' => '2',
-      'remark' => '后台 TOKEN IP 地区信息存储',
+      'desc' => '后台 TOKEN IP 地区信息存储',
     ], [
       'name' => '后台账号单点登录',
       'value' => '0',
       'type' => 'switch',
       'client' => '1',
       'login' => '2',
-      'remark' => '',
     ]];
     foreach ($data as $datum) {
       $config = new App\Models\Config();
@@ -78,7 +76,7 @@ class PushConfigData extends Migration
       $config->type = $datum['type'];
       $config->client = $datum['client'];
       $config->login = $datum['login'];
-      $config->remark = $datum['remark'] ?? '';
+      $config->desc = $datum['desc'] ?? '';
       $config->save();
     }
   }
