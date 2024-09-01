@@ -4,7 +4,7 @@
  * user：sa0ChunLuyu
  * date：2024年8月26日 10:43:09
  */
-import {$api, $base64, $image, $response} from '~/api'
+import {$api, $base64, $image, $response, $url} from '~/api'
 import {onBeforeRouteUpdate} from "vue-router";
 import $router from "~/router";
 import JsonEditorVue from 'json-editor-vue3'
@@ -486,6 +486,38 @@ const valueViewShow = (value, type) => {
   value_view_show.value = true
 }
 
+const downImportTemplate = async () => {
+  const response = await $api('AdminQuickDatabaseImportTemplate', {
+    database: $props.database
+  })
+  $response(response, () => {
+    window.open($image(response.data.url))
+  })
+}
+
+const downExport = async (type = 'page') => {
+  let s = {}
+  for (let i in search_form.value) {
+    s[i] = search_form.value[i].value
+  }
+  let q = {
+    search: s,
+  }
+  if (!!database_info.value.list.page) {
+    q.page = page_options.value.page
+  }
+  if (type === 'all') {
+    q.page = 'all'
+  }
+  const response = await $api('AdminQuickDatabaseExport', {
+    database: $props.database,
+    ...q
+  })
+  $response(response, () => {
+    window.open($image(response.data.url))
+  })
+}
+
 defineExpose({
   table_list_active,
   getDataList
@@ -689,8 +721,19 @@ onMounted(() => {
           </div>
         </div>
         <div class="table_button_group_wrapper">
-          <el-button v-if="database_info.list.button.includes('import')" disabled type="success">导入数据</el-button>
-          <el-button v-if="database_info.list.button.includes('export')" disabled type="warning">导出</el-button>
+          <el-dropdown v-if="database_info.list.button.includes('export')">
+            <el-button type="warning">导出</el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="downExport()">
+                  导出当前
+                </el-dropdown-item>
+                <el-dropdown-item @click="downExport('all')">
+                  全部导出
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </div>
       <el-table mt-2 border :data="table_list" style="width: 100%">

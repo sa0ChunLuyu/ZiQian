@@ -12,6 +12,11 @@ use GuzzleHttp\Client;
 
 class WanLiuController extends Controller
 {
+  /***auto route
+   * name: get
+   * type: Open
+   * method: post
+   */
   public function get(Request $request)
   {
     self::self_check('GET');

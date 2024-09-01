@@ -4,7 +4,7 @@
   <div class="page_404_wrapper">
     <div class="page_404_box_wrapper">
       <div class="page_404_svg_wrapper">
-        <Svg404></Svg404>
+        <img class="page_404_svg_image_wrapper" :src="`./assets/svg/404.svg`" alt="">
       </div>
       <div class="page_404_text_wrapper">
         <div>未找到页面</div>
@@ -30,6 +30,11 @@
 }
 
 .page_404_svg_wrapper {
+  width: 400px;
+  margin: 0 auto;
+}
+
+.page_404_svg_image_wrapper {
   width: 400px;
   margin: 0 auto;
 }

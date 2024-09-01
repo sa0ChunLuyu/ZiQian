@@ -61,10 +61,10 @@ const valueShow = (data, column) => {
   }
   return data
 }
-const iframe_array = ['pdf', 'video', 'audio', 'txt', 'js', 'css', 'word', 'excel', 'ppt', 'jsonCode']
+const iframe_array = ['pdf', 'video', 'audio', 'txt', 'js', 'css', 'word', 'excel', 'ppt']
 const office_array = ['word', 'excel', 'ppt']
-const view_array = ['pdf', 'video', 'audio', 'txt', 'js', 'css', 'jsonCode']
-const file_array = ['html', 'development']
+const view_array = ['pdf', 'video', 'audio']
+const file_array = ['html', 'development', 'txt', 'js', 'css']
 const jump_array = []
 const file_type_map = {
   image: '|png|jpg|jpeg|gif|bmp|svg|ico|',
@@ -78,8 +78,7 @@ const file_type_map = {
   js: '|js|',
   css: '|css|',
   html: '|html|',
-  development: '|php|sql|',
-  jsonCode: '|json|',
+  development: '|php|sql|json|',
   rar: '|rar|zip|',
   apk: '|apk|',
   bat: '|bat|',
@@ -223,7 +222,7 @@ const value_show_height = computed(() => {
              alt="">
       </div>
     </div>
-    <div class="w-full" v-else-if="['string','select'].includes($props.type)">
+    <div class="w-full" v-else-if="['string','select','json_array_count'].includes($props.type)">
       <div w-full
            v-if="'tooltip' in $props.column && !!$props.column.tooltip && valueShow($props.row[$props.column.value], $props.column).length > $props.column.tooltip">
         <el-tooltip effect="dark" :content="valueShow($props.row[$props.column.value], $props.column)" placement="top">

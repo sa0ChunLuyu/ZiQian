@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Lib\ZiQian;
 use App\Models\QuickDatabase;
-use Illuminate\Http\Request;
 use App\Lib\Zi;
 use App\Lib\Token;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class QuickDatabaseController extends Controller
 {
@@ -24,6 +26,8 @@ class QuickDatabaseController extends Controller
     $quick_database = QuickDatabase::where('database', $database)->first();
     if (!$quick_database) Zi::eco(100001, ['数据库']);
     self::self_checkAuth($quick_database);
+    $list_config = json_decode($quick_database->list, true);
+    if (!in_array('create', $list_config['button'])) Zi::eco(100026, ['创建']);
     self::self_checkRequest($quick_database, $data, 0);
     $id = DB::table($database)->insertGetId(array_merge($data, [
       'created_at' => ZiQian::date(),
@@ -46,6 +50,8 @@ class QuickDatabaseController extends Controller
     $quick_database = QuickDatabase::where('database', $database)->first();
     if (!$quick_database) Zi::eco(100001, ['数据库']);
     self::self_checkAuth($quick_database);
+    $list_config = json_decode($quick_database->list, true);
+    if (!in_array('update', $list_config['button'])) Zi::eco(100026, ['修改']);
     self::self_checkRequest($quick_database, $data, $id);
     $update = DB::table($database)->where('id', $id)->first();
     if (!$update) Zi::eco(100001, [$quick_database->name]);
@@ -69,6 +75,7 @@ class QuickDatabaseController extends Controller
     if (!$quick_database) Zi::eco(100001, ['数据库']);
     self::self_checkAuth($quick_database);
     $list_config = json_decode($quick_database->list, true);
+    if (!in_array('delete', $list_config['button'])) Zi::eco(100026, ['删除']);
     if (isset($list_config['delete'])) {
       foreach ($ids as $id) {
         $db = DB::table($database);
@@ -189,7 +196,6 @@ class QuickDatabaseController extends Controller
     $quick_database = QuickDatabase::where('database', $database)->first();
     if (!$quick_database) Zi::eco(100001, ['数据库']);
     self::self_checkAuth($quick_database);
-
     $form_groups = json_decode($quick_database->form, true);
     foreach ($form_groups as $key => $forms) {
       foreach ($forms as $k => $form) {
@@ -206,7 +212,6 @@ class QuickDatabaseController extends Controller
         $search_array[$key]['select'] = self::self_databaseSelect($search);
       }
     }
-
     return Zi::echo([
       'info' => [
         'list' => json_decode($quick_database->list, true),
@@ -242,6 +247,131 @@ class QuickDatabaseController extends Controller
     }
     $list = $db->get()->toArray();
     return array_merge($select, $list);
+  }
+
+  /***auto route
+   * name: export
+   * type: admin
+   * method: post
+   * param: /{database}
+   * query: ?page={page}
+   */
+  public function export($database)
+  {
+    $request = request();
+    $search = $request->post('search');
+    $page = $request->get('page');
+    $quick_database = QuickDatabase::where('database', $database)->first();
+    if (!$quick_database) Zi::eco(100001, ['数据库']);
+    self::self_checkAuth($quick_database);
+    $list_config = json_decode($quick_database->list, true);
+    if (!in_array('export', $list_config['button'])) Zi::eco(100026, ['导出']);
+    if (!isset($list_config['export'])) Zi::eco(100026, ['导出']);
+    $data = DB::table($database)->select($list_config['select']);
+    $search_rules = json_decode($quick_database->search, true);
+    foreach ($search_rules as $key => $search_rule) {
+      if ($search_rule['type'] === 'database_select') {
+        $search_rules[$key]['type'] = 'select';
+        $search_rules[$key]['select'] = self::self_databaseSelect($search_rule);
+      }
+    }
+    foreach ($search_rules as $label => $search_rule) {
+      if (isset($search[$label])) {
+        $range_array = ['datetimerange', 'daterange', 'timerange'];
+        if (in_array($search_rule['type'], $range_array)) {
+          $search_type = ['>=', '<='];
+          foreach ($search_type as $search_index => $search_item) {
+            if (isset($search[$label][$search_index]) && !!$search[$label][$search_index]) {
+              $value = $search[$label][$search_index];
+              $where_array = $search_rule['where'];
+              $data->where(function ($query) use ($value, $where_array, $search_item) {
+                $index = 0;
+                foreach ($where_array as $key => $where) {
+                  if ($index == 0) {
+                    $query->where($key, $search_item, $value);
+                  } else {
+                    $query->orWhere($key, $search_item, $value);
+                  }
+                  $index++;
+                }
+              });
+            }
+          }
+        } else {
+          if ($search[$label] != '') {
+            $value = $search[$label];
+            $where_array = $search_rule['where'];
+            $data->where(function ($query) use ($value, $where_array) {
+              $index = 0;
+              foreach ($where_array as $key => $where) {
+                if ($index == 0) {
+                  $query->where($key, $where, $where == 'like' ? '%' . $value . '%' : $value);
+                } else {
+                  $query->orWhere($key, $where, $where == 'like' ? '%' . $value . '%' : $value);
+                }
+                $index++;
+              }
+            });
+          }
+        }
+      }
+    }
+    if (isset($list_config['where'])) {
+      foreach ($list_config['where'] as $where) {
+        $data->where(function ($query) use ($where) {
+          $query->where($where[0], $where[1], $where[1] == 'like' ? '%' . $where[2] . '%' : $where[2]);
+        });
+      }
+    }
+    foreach ($list_config['order'] as $order) {
+      $data->orderBy($order['label'], $order['type']);
+    }
+    if ($page == 'all') {
+      $list = $data->get();
+    } else {
+      $list = $data->paginate($list_config['page'])->toArray();
+      $list = $list['data'];
+    }
+    $spreadsheet = new Spreadsheet();
+    $worksheet = $spreadsheet->getActiveSheet();
+
+    foreach ($list_config['export'] as $key => $export) {
+      $letter = self::self_numberToLetters($key + 1);
+      $worksheet->setCellValue($letter . '1', $export['label']);
+      if (!!$export['width']) {
+        $spreadsheet->getActiveSheet()->getColumnDimension($letter)->setWidth($export['width']);
+      }
+    }
+    foreach ($list as $row => $item) {
+      $item = json_decode(json_encode($item, JSON_UNESCAPED_UNICODE), true);
+      foreach ($list_config['export'] as $key => $export) {
+        $letter = self::self_numberToLetters($key + 1);
+        $worksheet->setCellValueExplicit($letter . ($row + 2), $item[$export['value']], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+      }
+    }
+    $dir_path = "public/QuickDataBase/export/$database";
+    Storage::makeDirectory($dir_path);
+    $datetime = date('YmdHis');
+    $excel_path = $dir_path . "/$datetime.xlsx";
+    $writer = new Xlsx($spreadsheet);
+    $excel = Storage::path($excel_path);
+    $writer->save($excel);
+    return Zi::echo([
+      'url' => '/storage/QuickDataBase/export/' . "$database/$datetime.xlsx"
+    ]);
+  }
+
+  public function self_numberToLetters($number)
+  {
+    $letters = '';
+    $base = 26;
+    $number--;
+    while ($number >= 0) {
+      $remainder = $number % $base;
+      $letters = chr($remainder + ord('A')) . $letters;
+      $number = intval($number / $base) - 1;
+    }
+    return $letters;
   }
 
   public function self_checkRequest($quick_database, &$data, $id)
