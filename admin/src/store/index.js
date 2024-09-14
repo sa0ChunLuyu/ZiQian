@@ -18,3 +18,4 @@ export const useLoginType = createGlobalState(() => useStorage('LOGIN_TYPE', 'lo
 export const useCollapsed = createGlobalState(() => useStorage('COLLAPSED', false))
 export const useRouterActive = createGlobalState(() => useStorage('ROUTER_ACTIVE', []))
 export const useIpNotification = createGlobalState(() => useStorage('IP_NOTIFICATION', false))
+export const usePageSpy = createGlobalState(() => useStorage('PageSpy', []))

@@ -11,6 +11,7 @@ import {
   useSaveTokenType,
   useSessionToken,
   useStore,
+  usePageSpy,
   useToken
 } from "~/store";
 import {$api, $image, $response} from "~/api";
@@ -20,6 +21,7 @@ import {getInfo} from "~/tool/info";
 
 const $ip_notification = useIpNotification()
 const $store = useStore()
+const $pageSpy = usePageSpy()
 const $save_token_type = useSaveTokenType()
 const $session_token = useSessionToken()
 const $token = useToken()
@@ -204,6 +206,72 @@ const proxyClick = () => {
   $login_type.value = 'proxy'
 }
 
+const pageSpy_data_default = {
+  id: String(new Date() / 1),
+  active: false,
+  name: '',
+  url: ''
+}
+const pageSpy_data = ref(JSON.parse(JSON.stringify(pageSpy_data_default)))
+const pageSpy_show = ref(false)
+const createPageSpyClick = () => {
+  pageSpy_data.value = JSON.parse(JSON.stringify({
+    ...pageSpy_data_default,
+    id: String(new Date() / 1),
+  }))
+  pageSpy_show.value = true
+}
+const updatePageSpyClick = (info) => {
+  pageSpy_data.value = JSON.parse(JSON.stringify(info))
+  pageSpy_show.value = true
+}
+
+const changePageSpyActiveClick = (index) => {
+  $pageSpy.value[index].active = !$pageSpy.value[index].active
+  for (let i in $pageSpy.value) {
+    if (Number(i) !== index) {
+      $pageSpy.value[i].active = false
+    }
+  }
+}
+
+const deletePageSpyClick = (index) => {
+  window.$box.confirm(
+      '是否确认删除该配置？',
+      '提示',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  ).then(() => {
+    $pageSpy.value.splice(index, 1)
+  }).catch(() => {
+  })
+}
+
+const pageSpyEditDone = () => {
+  if (pageSpy_data.value.name === '') return window.$message().error('请输入名称')
+  if (pageSpy_data.value.url === '') return window.$message().error('请输入接口地址')
+  let index = -1
+  for (let i in $pageSpy.value) {
+    if ($pageSpy.value[i].id === pageSpy_data.value.id) {
+      index = i
+      break
+    }
+  }
+  if (index === -1) {
+    $pageSpy.value.push(pageSpy_data.value)
+  } else {
+    $pageSpy.value[index] = JSON.parse(JSON.stringify(pageSpy_data.value))
+  }
+  pageSpy_show.value = false
+}
+
+const pageSpyClick = () => {
+  $login_type.value = 'pageSpy'
+}
+
 onMounted(() => {
   routerChange($router.currentRoute.value.query)
   checkLoginType()
@@ -211,6 +279,24 @@ onMounted(() => {
 })
 </script>
 <template>
+  <el-dialog v-model="pageSpy_show" title="代理" width="500">
+    <div>
+      <el-form label-width="70">
+        <el-form-item label="名称">
+          <el-input v-model="pageSpy_data.name" placeholder="请输入名称"></el-input>
+        </el-form-item>
+        <el-form-item label="接口地址">
+          <el-input v-model="pageSpy_data.url" placeholder="请输入接口地址"></el-input>
+        </el-form-item>
+      </el-form>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="pageSpy_show = false">取消</el-button>
+        <el-button type="primary" @click="pageSpyEditDone()">确认</el-button>
+      </div>
+    </template>
+  </el-dialog>
   <el-dialog v-model="proxy_show" title="代理" width="500">
     <div>
       <el-form label-width="70">
@@ -239,7 +325,37 @@ onMounted(() => {
       backgroundImage: 'url(' + $image($store.config['Login背景图']) + ')'
     }">
     <el-card :body-style="{ padding: '0px' }">
-      <div v-if="$login_type === 'proxy'" class="login_card_wrapper" p-5>
+      <div v-if="$login_type === 'pageSpy'" class="login_card_wrapper" p-5>
+        <div w-full>
+          <div class="proxy_button_wrapper">
+            <el-button @click="reloadLoginPage()" text type="primary">重新启动</el-button>
+            <el-button @click="createPageSpyClick()" text type="primary">新建调试</el-button>
+          </div>
+          <div class="proxy_table_wrapper">
+            <el-table :data="$pageSpy" border style="width: 100%" height="calc(100%)" size="small">
+              <el-table-column label="" width="30">
+                <template #default="scope">
+                  <div class="proxy_checkbox_wrapper">
+                    <div @click="changePageSpyActiveClick(scope.$index)" class="proxy_checkbox_cover_wrapper"></div>
+                    <el-checkbox v-model="scope.row.active"></el-checkbox>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="名称" width="80"/>
+              <el-table-column prop="url" label="接口地址"/>
+              <el-table-column label="操作" width="180">
+                <template #default="scope">
+                  <div>
+                    <el-button size="small" @click="updatePageSpyClick(scope.row)" text type="primary">编辑</el-button>
+                    <el-button size="small" @click="deletePageSpyClick(scope.$index)" text type="danger">删除</el-button>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="$login_type === 'proxy'" class="login_card_wrapper" p-5>
         <div w-full>
           <div class="proxy_button_wrapper">
             <el-button @click="reloadLoginPage()" text type="primary">重新启动</el-button>
@@ -271,7 +387,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div v-if="$login_type === 'login'" class="login_card_wrapper">
+      <div v-else class="login_card_wrapper">
         <div class="login_cover_wrapper" :style="{
             backgroundImage: 'url(' + $image($store.config['Login欢迎图片']) + ')',
             backgroundColor: $store.config['Login背景色']
@@ -345,7 +461,7 @@ onMounted(() => {
                 </div>
                 <div mx-1>
                   <el-tooltip effect="dark" content="调试设置" placement="top">
-                    <el-button text>
+                    <el-button @click="pageSpyClick()" text>
                       <Icon type="lightning"></Icon>
                     </el-button>
                   </el-tooltip>
