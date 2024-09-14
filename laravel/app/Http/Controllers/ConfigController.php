@@ -5,9 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Config;
 use Illuminate\Http\Request;
 use App\Lib\Zi;
+use App\Lib\Token;
 
 class ConfigController extends Controller
 {
+  /***auto route
+   * name: edit
+   * type: admin
+   * method: post
+   */
+  public function edit(Request $request)
+  {
+    Token::admin(['/config/setting']);
+    $name = $request->get('name');
+    $value = $request->get('value');
+    $config = Config::where('name', $name)->first();
+    if (!!$config) {
+      $config->value = $value;
+      $config->save();
+    }
+    return Zi::echo();
+  }
+
   /***auto route
    * name: get
    * type: admin
@@ -18,7 +37,11 @@ class ConfigController extends Controller
   {
     $client = $request->get('client');
     if (!$client) $client = 'public';
-    $client_number = 0;
+    $client_map = [
+      'public' => 0,
+      'admin' => 1,
+    ];
+    $client_number = $client_map[$client];
     $config_arr = $request->post('config_arr');
     if (!$config_arr) $config_arr = [];
     $configs = $this->self_getConfigList($config_arr, $client_number);

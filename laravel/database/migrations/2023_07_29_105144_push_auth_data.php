@@ -66,13 +66,22 @@ class PushAuthData extends Migration
       'check' => '2',
       'show' => '1',
     ], [
-      'name' => '/config/config',
+      'name' => '/config/setting',
       'title' => '后台配置',
       'icon' => 'setting-config',
       'pid' => '6',
       'type' => '2',
       'check' => '1',
       'show' => '1',
+      'message' => '该账号所属权限组不能对参数配置进行设置'
+    ],[
+      'name' => '/config/config',
+      'title' => '开发配置',
+      'icon' => 'setting-config',
+      'pid' => '6',
+      'type' => '2',
+      'check' => '1',
+      'show' => '2',
       'message' => '该账号所属权限组不能对参数配置进行设置'
     ], [
       'name' => '/config/router',

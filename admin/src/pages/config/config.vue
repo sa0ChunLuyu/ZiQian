@@ -1,6 +1,6 @@
 <script setup>
 /**
- * name：后台配置
+ * name：开发配置
  * user：sa0ChunLuyu
  * date：2024年8月27日 11:45:09
  */
@@ -8,7 +8,7 @@
 <template>
   <div>
     <el-card>
-      <template #header>后台配置</template>
+      <template #header>开发配置</template>
       <div>
         <QuickDatabase database="configs">
           <template v-slot:header>
@@ -25,5 +25,5 @@
 
 </style>
 <route>
-{"meta":{"title":"后台配置"}}
+{"meta":{"title":"开发配置"}}
 </route>

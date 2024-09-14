@@ -123,6 +123,8 @@
 .el-popper,
 .el-notification,
 .el-message-box,
+.el-color-picker__trigger,
+.el-color-predefine__color-selector > div,
 .el-card {
     border-radius: 0 !important;
 }
