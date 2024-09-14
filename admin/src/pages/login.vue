@@ -63,9 +63,6 @@ const page_options = ref(default_page_options)
 onBeforeRouteUpdate((to) => {
   routerChange(to.query)
 })
-const getCaptchaCreate = () => {
-  ImageCaptchaCreate()
-}
 const routerChange = (query) => {
   page_options.value = {
     f: query.f || default_page_options.f
@@ -115,12 +112,19 @@ const AdminQuit = async () => {
     }
   })
 }
+const captcha_open = ref(true)
+const checkCaptcha = () => {
+  captcha_open.value = Number($store.config['后台图形验证']) === 1
+  if (!!captcha_open.value) {
+    ImageCaptchaCreate()
+  }
+}
 
 const $login_type = useLoginType()
 const checkLoginType = () => {
   switch ($login_type.value) {
     case 'login':
-      getCaptchaCreate()
+      checkCaptcha()
       break
   }
 }
@@ -298,7 +302,7 @@ onMounted(() => {
                     </template>
                   </el-input>
                 </el-form-item>
-                <el-form-item>
+                <el-form-item v-if="captcha_open">
                   <div class="code_wrapper">
                     <div class="code_input_wrapper">
                       <el-input w-full v-model="login_data.code"
