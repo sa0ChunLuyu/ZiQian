@@ -78,7 +78,12 @@ class QuickDatabaseController extends Controller
     if (!in_array('delete', $list_config['button'])) Zi::eco(100026, ['删除']);
     if (isset($list_config['delete'])) {
       foreach ($ids as $id) {
-        $db = DB::table($database);
+        if (isset($list_config['delete']['database'])) {
+          $check_database_name = $list_config['delete']['database'];
+        } else {
+          $check_database_name = $database;
+        }
+        $db = DB::table($check_database_name);
         foreach ($list_config['delete']['where'] as $delete) {
           if ($delete[2] == '##DELETE-VALUE##') {
             $delete[2] = $id;
@@ -212,9 +217,16 @@ class QuickDatabaseController extends Controller
         $search_array[$key]['select'] = self::self_databaseSelect($search);
       }
     }
+    $list_config = json_decode($quick_database->list, true);
+    foreach ($list_config['table'] as $key => $table) {
+      if ($table['type'] === 'database_select') {
+        $list_config['table'][$key]['type'] = 'select';
+        $list_config['table'][$key]['select'] = self::self_databaseSelect($table);
+      }
+    }
     return Zi::echo([
       'info' => [
-        'list' => json_decode($quick_database->list, true),
+        'list' => $list_config,
         'search' => $search_array,
         'form' => $form_groups,
         'request' => json_decode($quick_database->request, true),
