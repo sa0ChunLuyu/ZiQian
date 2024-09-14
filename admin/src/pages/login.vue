@@ -76,7 +76,7 @@ const captcha_loading = ref(false)
 const ImageCaptchaCreate = async () => {
   if (captcha_loading.value) return
   captcha_loading.value = true
-  const response = await $api('AdminImageCaptchaCreate', {
+  const response = await $api('AdminImageCaptchaCreate', {}, {
     loading: false
   })
   captcha_loading.value = false
