@@ -568,104 +568,106 @@ onMounted(() => {
         width: `${database_info.list.form.span[k]}px`
       }">
         <el-form label-position="top">
-          <el-form-item v-for="(ii,ik) in database_info.form[k]" :key="ik" :label="ii.label">
-            <template v-if="formType(ii.type) === 'select'">
-              <el-select @change="(e)=>{formSelectChange(e,k,ik)}" v-model="edit_data.form[k][ik]"
-                         :empty-values="[null, undefined]" :placeholder="ii.placeholder" :disabled="ii.disabled">
-                <el-option v-for="(iii,iik) in ii.select" :key="iik" :label="iii.label"
-                           :value="iii.value"></el-option>
-              </el-select>
-            </template>
-            <template v-else-if="formType(ii.type) === 'image'">
-              <div class="form_image_wrapper">
-                <div v-if="!!edit_data.form[k][ik]" class="form_image_delete_wrapper">
-                  <el-button @click="imageDeleteClick(k, ik, -2)" type="danger" size="small">
-                    <Icon type="delete" :size="12"></Icon>
-                  </el-button>
-                </div>
-                <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
-                           @change="(e)=>{fileChange(e,k,ik,-2)}">
-                  <el-image class="form_image_show_wrapper" v-if="!!edit_data.form[k][ik]"
-                            :src="$image(edit_data.form[k][ik])" fit="contain"></el-image>
-                  <div v-else class="form_image_empty_wrapper">上传图片</div>
-                </el-upload>
-              </div>
-            </template>
-            <template v-else-if="formType(ii.type) === 'textarea'">
-              <el-input :disabled="ii.disabled" type="textarea" v-model="edit_data.form[k][ik]"
-                        :placeholder="ii.placeholder"></el-input>
-            </template>
-            <template v-else-if="formType(ii.type) === 'stringArray'">
-              <div w-full>
-                <div v-for="(iii,iik) in edit_data.form[k][ik]" class="form_string_array_wrapper mb-2">
-                  <el-input class="form_string_array_input_wrapper" v-model="edit_data.form[k][ik][iik]"
-                            :placeholder="ii.placeholder" :disabled="ii.disabled"></el-input>
-                  <el-button @click="stringArrayDeleteClick(k, ik, iik)" text>
-                    <Icon type="delete"></Icon>
-                  </el-button>
-                </div>
-                <div class="form_string_array_wrapper">
-                  <el-input class="form_string_array_input_wrapper" v-model="string_array_input"
-                            :placeholder="ii.placeholder" :disabled="ii.disabled"></el-input>
-                  <el-button @click="stringArrayCreateClick(k, ik)" text>
-                    <Icon type="plus"></Icon>
-                  </el-button>
-                </div>
-              </div>
-            </template>
-            <template v-else-if="formType(ii.type) === 'imageArray'">
-              <div class="form_image_array_wrapper">
-                <div class="form_image_wrapper mb-2 mr-2" v-for="(iii,iik) in edit_data.form[k][ik]">
-                  <div class="form_image_delete_wrapper">
-                    <el-button @click="imageDeleteClick(k, ik, iik)" type="danger" size="small">
+          <template v-for="(ii,ik) in database_info.form[k]">
+            <el-form-item v-if="!!ii.show" :key="ik" :label="ii.label">
+              <template v-if="formType(ii.type) === 'select'">
+                <el-select @change="(e)=>{formSelectChange(e,k,ik)}" v-model="edit_data.form[k][ik]"
+                           :empty-values="[null, undefined]" :placeholder="ii.placeholder" :disabled="ii.disabled">
+                  <el-option v-for="(iii,iik) in ii.select" :key="iik" :label="iii.label"
+                             :value="iii.value"></el-option>
+                </el-select>
+              </template>
+              <template v-else-if="formType(ii.type) === 'image'">
+                <div class="form_image_wrapper">
+                  <div v-if="!!edit_data.form[k][ik]" class="form_image_delete_wrapper">
+                    <el-button @click="imageDeleteClick(k, ik, -2)" type="danger" size="small">
                       <Icon type="delete" :size="12"></Icon>
                     </el-button>
                   </div>
                   <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
-                             @change="(e)=>{fileChange(e,k,ik,iik)}">
-                    <el-image class="form_image_show_wrapper" :src="$image(iii)" fit="contain"></el-image>
+                             @change="(e)=>{fileChange(e,k,ik,-2)}">
+                    <el-image class="form_image_show_wrapper" v-if="!!edit_data.form[k][ik]"
+                              :src="$image(edit_data.form[k][ik])" fit="contain"></el-image>
+                    <div v-else class="form_image_empty_wrapper">上传图片</div>
                   </el-upload>
                 </div>
-                <div class="form_image_wrapper mb-2 mr-2">
-                  <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
-                             @change="(e)=>{fileChange(e,k,ik,-1)}">
-                    <div class="form_image_empty_wrapper">上传图片</div>
-                  </el-upload>
+              </template>
+              <template v-else-if="formType(ii.type) === 'textarea'">
+                <el-input :disabled="ii.disabled" type="textarea" v-model="edit_data.form[k][ik]"
+                          :placeholder="ii.placeholder"></el-input>
+              </template>
+              <template v-else-if="formType(ii.type) === 'stringArray'">
+                <div w-full>
+                  <div v-for="(iii,iik) in edit_data.form[k][ik]" class="form_string_array_wrapper mb-2">
+                    <el-input class="form_string_array_input_wrapper" v-model="edit_data.form[k][ik][iik]"
+                              :placeholder="ii.placeholder" :disabled="ii.disabled"></el-input>
+                    <el-button @click="stringArrayDeleteClick(k, ik, iik)" text>
+                      <Icon type="delete"></Icon>
+                    </el-button>
+                  </div>
+                  <div class="form_string_array_wrapper">
+                    <el-input class="form_string_array_input_wrapper" v-model="string_array_input"
+                              :placeholder="ii.placeholder" :disabled="ii.disabled"></el-input>
+                    <el-button @click="stringArrayCreateClick(k, ik)" text>
+                      <Icon type="plus"></Icon>
+                    </el-button>
+                  </div>
                 </div>
-              </div>
-            </template>
-            <template v-else-if="formType(ii.type) === 'json'">
-              <JsonEditorVue language="zh-CN" :modeList="[]" class="form_json_wrapper" v-model="edit_data.form[k][ik]"/>
-            </template>
-            <template v-else-if="formType(ii.type) === 'richText'">
-              <Tinymce :ref="(e)=>{richTextRef(e,ik)}" :content="edit_data.form[k][ik]" :width="900"></Tinymce>
-            </template>
-            <template v-else-if="formType(ii.type) === 'switch'">
-              <el-switch :disabled="ii.disabled" v-model="edit_data.form[k][ik]" inline-prompt
-                         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                         active-text="开启" inactive-text="关闭" active-value="1" inactive-value="0"/>
-            </template>
-            <template v-else-if="formType(ii.type) === 'color'">
-              <el-color-picker :disabled="ii.disabled" :predefine="predefine_config" v-model="edit_data.form[k][ik]"
-                               show-alpha/>
-            </template>
-            <template v-else-if="formType(ii.type) === 'number'">
-              <el-input-number :disabled="ii.disabled" v-model="edit_data.form[k][ik]"
-                               :placeholder="ii.placeholder" :min="ii.min" :max="ii.max"
-                               :step="ii.step"></el-input-number>
-            </template>
-            <template v-else-if="formType(ii.type) === 'icon'">
-              <div cursor-pointer @click="iconClick(k, ik)" class="form_icon_wrapper" text-center>
-                <el-icon>
-                  <Icon v-if="!!edit_data.form[k][ik]" :type="edit_data.form[k][ik]"></Icon>
-                </el-icon>
-              </div>
-            </template>
-            <template v-else>
-              <el-input :disabled="ii.disabled" v-model="edit_data.form[k][ik]"
-                        :placeholder="ii.placeholder"></el-input>
-            </template>
-          </el-form-item>
+              </template>
+              <template v-else-if="formType(ii.type) === 'imageArray'">
+                <div class="form_image_array_wrapper">
+                  <div class="form_image_wrapper mb-2 mr-2" v-for="(iii,iik) in edit_data.form[k][ik]">
+                    <div class="form_image_delete_wrapper">
+                      <el-button @click="imageDeleteClick(k, ik, iik)" type="danger" size="small">
+                        <Icon type="delete" :size="12"></Icon>
+                      </el-button>
+                    </div>
+                    <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
+                               @change="(e)=>{fileChange(e,k,ik,iik)}">
+                      <el-image class="form_image_show_wrapper" :src="$image(iii)" fit="contain"></el-image>
+                    </el-upload>
+                  </div>
+                  <div class="form_image_wrapper mb-2 mr-2">
+                    <el-upload :disabled="ii.disabled" :auto-upload="false" :show-file-list="false"
+                               @change="(e)=>{fileChange(e,k,ik,-1)}">
+                      <div class="form_image_empty_wrapper">上传图片</div>
+                    </el-upload>
+                  </div>
+                </div>
+              </template>
+              <template v-else-if="formType(ii.type) === 'json'">
+                <JsonEditorVue language="zh-CN" :modeList="[]" class="form_json_wrapper" v-model="edit_data.form[k][ik]"/>
+              </template>
+              <template v-else-if="formType(ii.type) === 'richText'">
+                <Tinymce :ref="(e)=>{richTextRef(e,ik)}" :content="edit_data.form[k][ik]" :width="900"></Tinymce>
+              </template>
+              <template v-else-if="formType(ii.type) === 'switch'">
+                <el-switch :disabled="ii.disabled" v-model="edit_data.form[k][ik]" inline-prompt
+                           style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                           active-text="开启" inactive-text="关闭" active-value="1" inactive-value="0"/>
+              </template>
+              <template v-else-if="formType(ii.type) === 'color'">
+                <el-color-picker :disabled="ii.disabled" :predefine="predefine_config" v-model="edit_data.form[k][ik]"
+                                 show-alpha/>
+              </template>
+              <template v-else-if="formType(ii.type) === 'number'">
+                <el-input-number :disabled="ii.disabled" v-model="edit_data.form[k][ik]"
+                                 :placeholder="ii.placeholder" :min="ii.min" :max="ii.max"
+                                 :step="ii.step"></el-input-number>
+              </template>
+              <template v-else-if="formType(ii.type) === 'icon'">
+                <div cursor-pointer @click="iconClick(k, ik)" class="form_icon_wrapper" text-center>
+                  <el-icon>
+                    <Icon v-if="!!edit_data.form[k][ik]" :type="edit_data.form[k][ik]"></Icon>
+                  </el-icon>
+                </div>
+              </template>
+              <template v-else>
+                <el-input :disabled="ii.disabled" v-model="edit_data.form[k][ik]"
+                          :placeholder="ii.placeholder"></el-input>
+              </template>
+            </el-form-item>
+          </template>
         </el-form>
       </div>
     </div>

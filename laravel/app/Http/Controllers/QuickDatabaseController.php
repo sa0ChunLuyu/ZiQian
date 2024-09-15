@@ -177,6 +177,11 @@ class QuickDatabaseController extends Controller
         });
       }
     }
+    foreach ($list_config['table'] as $item) {
+      if ($item['type'] == 'login' && isset($item['self']) && !!$item['self']) {
+        $data->where($item['value'], Token::$info->id);
+      }
+    }
     foreach ($list_config['order'] as $order) {
       $data->orderBy($order['label'], $order['type']);
     }
@@ -204,9 +209,12 @@ class QuickDatabaseController extends Controller
     $form_groups = json_decode($quick_database->form, true);
     foreach ($form_groups as $key => $forms) {
       foreach ($forms as $k => $form) {
+        $form_groups[$key][$k]['show'] = true;
         if ($form['type'] === 'database_select') {
           $form_groups[$key][$k]['type'] = 'select';
           $form_groups[$key][$k]['select'] = self::self_databaseSelect($form);
+        } elseif ($form['type'] === 'login') {
+          $form_groups[$key][$k]['show'] = false;
         }
       }
     }
@@ -222,6 +230,13 @@ class QuickDatabaseController extends Controller
       if ($table['type'] === 'database_select') {
         $list_config['table'][$key]['type'] = 'select';
         $list_config['table'][$key]['select'] = self::self_databaseSelect($table);
+      } elseif ($table['type'] === 'login') {
+        $list_config['table'][$key]['type'] = 'select';
+        $select_list = DB::table('admins')->select([
+          DB::raw('`id` as `value`'),
+          DB::raw('`nickname` as `label`')
+        ])->get();
+        $list_config['table'][$key]['select'] = $select_list;
       }
     }
     return Zi::echo([
@@ -391,6 +406,15 @@ class QuickDatabaseController extends Controller
     $rules = json_decode($quick_database->request, true);
     $form = json_decode($quick_database->form, true);
     $code = 100017;
+    foreach ($form as $form_item) {
+      foreach ($form_item as $key => $item) {
+        if ($item['type'] == 'login') {
+          if ($id == 0 || (isset($item['update']) && !!$item['update'])) {
+            $data[$key] = Token::$info->id;
+          }
+        }
+      }
+    }
     foreach ($rules as $label => $rule) {
       $form_index = 0;
       foreach ($form as $key => $form_item) {
@@ -444,6 +468,16 @@ class QuickDatabaseController extends Controller
             $check_ret = true;
             eval($check['php']);
             if (!$check_ret) Zi::eco($code, [$message]);
+          }
+
+          if ($id != 0) {
+            if (isset($check['self']) && !!$check['self']) {
+              $self = DB::table($quick_database->database)
+                ->where('id', $id)
+                ->where($label, $data[$label])
+                ->first();
+              if (!$self) Zi::eco($code, [$message]);
+            }
           }
         }
       }
