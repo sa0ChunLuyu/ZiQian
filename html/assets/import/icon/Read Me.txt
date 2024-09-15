@@ -1,0 +1,6 @@
+草莓图标库PRO 支持个人私用和商用，禁止分发和分享到其他平台，感谢支持，祝使用愉快！
+
+图标库官网：http://chuangzaoshi.com/icon/
+使用方法参考：https://github.com/xiangsudian/caomei
+草莓图标Pro商业版权：像素君/创造狮
+草莓图标开源部分的协议：http://scripts.sil.org/OFL
