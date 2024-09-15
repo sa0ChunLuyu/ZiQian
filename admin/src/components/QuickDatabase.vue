@@ -643,8 +643,14 @@ onMounted(() => {
               </template>
               <template v-else-if="formType(ii.type) === 'switch'">
                 <el-switch :disabled="ii.disabled" v-model="edit_data.form[k][ik]" inline-prompt
-                           style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                           active-text="开启" inactive-text="关闭" active-value="1" inactive-value="0"/>
+                           :style="{
+                           '--el-switch-on-color': 'active_color' in ii ? ii.active_color : '#13ce66',
+                           '--el-switch-off-color': 'inactive_color' in ii ? ii.inactive_color : '#ff4949'
+                         }"
+                           :active-text="'active_text' in ii ? ii.active_text : '开启'"
+                           :inactive-text="'inactive_text' in ii ? ii.inactive_text : '关闭'"
+                           :active-value="'active_value' in ii ? ii.active_value : '1'"
+                           :inactive-value="'inactive_value' in ii ? ii.inactive_value : '0'"/>
               </template>
               <template v-else-if="formType(ii.type) === 'color'">
                 <el-color-picker :disabled="ii.disabled" :predefine="predefine_config" v-model="edit_data.form[k][ik]"
