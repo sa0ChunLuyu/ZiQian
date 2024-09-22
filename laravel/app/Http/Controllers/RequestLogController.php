@@ -17,7 +17,7 @@ class RequestLogController extends Controller
    */
   public function txt(Request $request)
   {
-    Token::admin(['config-log']);
+    Token::admin(['/config/log']);
     $id = $request->post('id');
     $type = $request->post('type');
     $log = DB::table('zz_request_log_' . date('ym', strtotime($request->post('created_at'))))->where('id', $id)->first();
@@ -72,7 +72,7 @@ class RequestLogController extends Controller
    */
   public function list(Request $request)
   {
-    Token::admin(['config-log']);
+    Token::admin(['/config/log']);
     $search = $request->post('search');
     $time = $request->post('time');
     $method = $request->post('method');

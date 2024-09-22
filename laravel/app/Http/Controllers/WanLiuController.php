@@ -62,7 +62,7 @@ class WanLiuController extends Controller
    */
   public function token()
   {
-    Token::admin(['config-upload']);
+    Token::admin(['/config/upload']);
     $app_id = env('APP_ID');
     $app_secret = env('APP_SECRET');
     $time = (string)time();

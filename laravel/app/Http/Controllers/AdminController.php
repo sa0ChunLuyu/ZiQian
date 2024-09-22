@@ -26,7 +26,7 @@ class AdminController extends Controller
    */
   public function resetPassword(Request $request)
   {
-    Token::admin(['admin-list']);
+    Token::admin(['/admin/list']);
     $id = $request->post('id');
     $admin = Admin::where('id', $id)->where('del', 2)->first();
     if (!$admin) Zi::eco(100001, ['管理员']);
@@ -49,7 +49,7 @@ class AdminController extends Controller
    */
   public function create(EditAdmin $request)
   {
-    Token::admin(['admin-list']);
+    Token::admin(['/admin/list']);
     $account = $request->post('account');
     $admin_account = AdminAccount::where('account', $account)->where('type', 1)->where('del', 2)->first();
     if ($admin_account) Zi::eco(100021);
@@ -76,7 +76,7 @@ class AdminController extends Controller
    */
   public function update(EditAdmin $request)
   {
-    Token::admin(['admin-list']);
+    Token::admin(['/admin/list']);
     $id = $request->post('id');
     $account = $request->post('account');
     $admin_account = AdminAccount::where('admin', '!=', $id)->where('account', $account)->where('type', 1)->where('del', 2)->first();
@@ -105,7 +105,7 @@ class AdminController extends Controller
    */
   public function delete(Request $request)
   {
-    Token::admin(['admin-list']);
+    Token::admin(['/admin/list']);
     $id = $request->post('id');
     $admin = Admin::where('id', $id)->where('del', 2)->first();
     if (!$admin) Zi::eco(100001, ['管理员']);
@@ -126,7 +126,7 @@ class AdminController extends Controller
    */
   public function list(Request $request)
   {
-    Token::admin(['admin-list']);
+    Token::admin(['/admin/list']);
     $status = $request->post('status');
     $search = $request->post('search');
     $admin_auth_group = $request->post('admin_auth_group');

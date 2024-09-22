@@ -16,7 +16,7 @@ class AdminAuthGroupController extends Controller
    */
   public function update(Request $request)
   {
-    Token::admin(['admin-auth']);
+    Token::admin(['/admin/auth']);
     $admin_auth_group = AdminAuthGroup::where('id', $request->post('id'))
       ->where('del', 2)->first();
     if (!$admin_auth_group) Zi::eco(100001, ['权限组']);

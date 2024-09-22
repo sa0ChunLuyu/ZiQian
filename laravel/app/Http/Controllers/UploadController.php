@@ -18,7 +18,7 @@ class UploadController extends Controller
    */
   public function delete(Request $request)
   {
-    Token::admin(['config-upload']);
+    Token::admin(['/config/upload']);
     $id = $request->post('id');
     $upload = Upload::where('id', $id)->first();
     if (!$upload) Zi::eco(100001, ['上传文件']);
